@@ -1,0 +1,717 @@
+openapi: 3.0.3
+info:
+  title: Exam Generator API
+  description: |
+    Serverless REST API for generating, listing, and downloading mock IT certification exams.
+    All endpoints require the `x-api-key` header.
+  version: 1.0.0
+
+servers:
+  - url: https://{apiId}.execute-api.{region}.amazonaws.com/{stage}
+    variables:
+      apiId:
+        default: api-id
+        description: API Gateway REST API ID.
+      region:
+        default: us-east-1
+        description: AWS region where the API is deployed.
+      stage:
+        default: dev
+        description: API Gateway stage name (e.g. dev, prod).
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /v1/health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      responses:
+        '200':
+          description: API is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /v1/certifications:
+    get:
+      summary: List active certifications
+      operationId: listCertifications
+      responses:
+        '200':
+          description: List of active certifications.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificationListResponse'
+
+    post:
+      summary: Create a certification
+      operationId: createCertification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCertificationRequest'
+      responses:
+        '201':
+          description: Certification created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicCertification'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /v1/certifications/{id}:
+    get:
+      summary: Get a certification
+      operationId: getCertificationById
+      parameters:
+        - $ref: '#/components/parameters/CertificationId'
+      responses:
+        '200':
+          description: Certification found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicCertification'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update a certification
+      operationId: updateCertification
+      parameters:
+        - $ref: '#/components/parameters/CertificationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCertificationRequest'
+      responses:
+        '200':
+          description: Certification updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicCertification'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/exams:
+    get:
+      summary: List exams
+      operationId: listExams
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ExamStatus'
+            default: READY
+        - name: provider
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Provider'
+        - name: certificationId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of exams.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExamListResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+
+    post:
+      summary: Request exam generation
+      operationId: requestExamGeneration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestExamGeneration'
+      responses:
+        '201':
+          description: Exam generation request accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedExamResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/exams/{id}:
+    get:
+      summary: Get full exam
+      operationId: getExamById
+      parameters:
+        - $ref: '#/components/parameters/ExamId'
+      responses:
+        '200':
+          description: Full exam JSON, including the question set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullExam'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ExamNotReady'
+
+    delete:
+      summary: Delete an exam
+      operationId: deleteExam
+      parameters:
+        - $ref: '#/components/parameters/ExamId'
+      responses:
+        '204':
+          description: Exam and its artifacts deleted.
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/exams/{id}/status:
+    get:
+      summary: Get exam generation status
+      operationId: getExamStatus
+      parameters:
+        - $ref: '#/components/parameters/ExamId'
+      responses:
+        '200':
+          description: Current exam status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExamStatusResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/exams/{id}/download:
+    get:
+      summary: Get presigned PDF download URL
+      operationId: getExamDownloadUrl
+      parameters:
+        - $ref: '#/components/parameters/ExamId'
+      responses:
+        '200':
+          description: Presigned URL for the generated PDF.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExamDownloadResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ExamNotReady'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+
+  parameters:
+    CertificationId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Certification UUID.
+
+    ExamId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Exam UUID.
+
+  responses:
+    InvalidRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: InvalidRequest
+            message: 'certificationId: Invalid uuid'
+
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: NotFound
+            message: Certification not found.
+
+    Conflict:
+      description: Request conflicts with the current state.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Conflict
+            message: 'Certification (aws, CLF-C02) already exists.'
+
+    ExamNotReady:
+      description: Exam exists but is not ready yet.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: ExamNotReady
+            message: The exam is not ready yet.
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: ok
+
+    Provider:
+      type: string
+      enum:
+        - aws
+        - azure
+        - gcp
+
+    ExamStatus:
+      type: string
+      enum:
+        - GENERATING
+        - READY
+        - FAILED
+
+    Difficulty:
+      type: string
+      enum:
+        - easy
+        - medium
+        - hard
+
+    DifficultyDistribution:
+      type: object
+      required:
+        - easy
+        - medium
+        - hard
+      properties:
+        easy:
+          type: number
+          minimum: 0
+          maximum: 1
+        medium:
+          type: number
+          minimum: 0
+          maximum: 1
+        hard:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    CertificationConfig:
+      type: object
+      required:
+        - questionCount
+        - difficultyDistribution
+        - domains
+        - modelId
+        - promptTemplate
+      properties:
+        questionCount:
+          type: integer
+          minimum: 1
+          maximum: 100
+        difficultyDistribution:
+          $ref: '#/components/schemas/DifficultyDistribution'
+        domains:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 1
+        modelId:
+          type: string
+          minLength: 1
+        promptTemplate:
+          type: string
+          minLength: 1
+
+    PublicCertificationConfig:
+      type: object
+      required:
+        - questionCount
+        - difficultyDistribution
+        - domains
+        - modelId
+      properties:
+        questionCount:
+          type: integer
+          minimum: 1
+          maximum: 100
+        difficultyDistribution:
+          $ref: '#/components/schemas/DifficultyDistribution'
+        domains:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 1
+        modelId:
+          type: string
+          minLength: 1
+
+    CertificationBase:
+      type: object
+      required:
+        - id
+        - provider
+        - code
+        - name
+        - version
+        - description
+        - isActive
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          $ref: '#/components/schemas/Provider'
+        code:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        version:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        isActive:
+          type: boolean
+
+    PublicCertification:
+      allOf:
+        - $ref: '#/components/schemas/CertificationBase'
+        - type: object
+          required:
+            - config
+          properties:
+            config:
+              $ref: '#/components/schemas/PublicCertificationConfig'
+
+    CreateCertificationRequest:
+      type: object
+      required:
+        - provider
+        - code
+        - name
+        - version
+        - description
+        - isActive
+        - config
+      properties:
+        provider:
+          $ref: '#/components/schemas/Provider'
+        code:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        version:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        isActive:
+          type: boolean
+        config:
+          $ref: '#/components/schemas/CertificationConfig'
+
+    UpdateCertificationRequest:
+      type: object
+      required:
+        - name
+        - version
+        - description
+        - isActive
+        - config
+      properties:
+        name:
+          type: string
+          minLength: 1
+        version:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        isActive:
+          type: boolean
+        config:
+          $ref: '#/components/schemas/CertificationConfig'
+
+    CertificationListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicCertification'
+
+    AnswerOption:
+      type: object
+      required:
+        - id
+        - label
+        - text
+        - isCorrect
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+          minLength: 1
+        text:
+          type: string
+          minLength: 1
+        isCorrect:
+          type: boolean
+
+    Question:
+      type: object
+      required:
+        - id
+        - number
+        - domain
+        - difficulty
+        - text
+        - options
+        - explanation
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          minimum: 1
+        domain:
+          type: string
+          minLength: 1
+        difficulty:
+          $ref: '#/components/schemas/Difficulty'
+        text:
+          type: string
+          minLength: 1
+        options:
+          type: array
+          minItems: 2
+          items:
+            $ref: '#/components/schemas/AnswerOption'
+        explanation:
+          type: string
+          minLength: 1
+        reference:
+          type: string
+
+    Exam:
+      type: object
+      required:
+        - id
+        - certificationId
+        - provider
+        - title
+        - status
+        - createdAt
+        - finishedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        certificationId:
+          type: string
+          format: uuid
+        provider:
+          $ref: '#/components/schemas/Provider'
+        title:
+          type: string
+          minLength: 1
+        status:
+          $ref: '#/components/schemas/ExamStatus'
+        createdAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        s3KeyJson:
+          type: string
+        s3KeyPdf:
+          type: string
+
+    FullExam:
+      allOf:
+        - $ref: '#/components/schemas/Exam'
+        - type: object
+          required:
+            - schemaVersion
+            - questions
+          properties:
+            schemaVersion:
+              type: string
+              minLength: 1
+            questions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Question'
+
+    RequestExamGeneration:
+      type: object
+      required:
+        - certificationId
+      properties:
+        certificationId:
+          type: string
+          format: uuid
+
+    CreatedExamResponse:
+      type: object
+      required:
+        - id
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ExamStatus'
+
+    ExamStatusResponse:
+      type: object
+      required:
+        - id
+        - status
+        - createdAt
+        - finishedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ExamStatus'
+        createdAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    ExamDownloadResponse:
+      type: object
+      required:
+        - downloadUrl
+        - expiresAt
+      properties:
+        downloadUrl:
+          type: string
+          format: uri
+        expiresAt:
+          type: string
+          format: date-time
+
+    Cursor:
+      type: object
+      required:
+        - nextCursor
+        - hasNextPage
+      properties:
+        nextCursor:
+          type: string
+          nullable: true
+        hasNextPage:
+          type: boolean
+
+    ExamListResponse:
+      type: object
+      required:
+        - items
+        - cursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Exam'
+        cursor:
+          $ref: '#/components/schemas/Cursor'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
