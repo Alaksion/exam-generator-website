@@ -11,7 +11,7 @@ Components come from [shadcn/ui](https://ui.shadcn.com) (`Base UI` primitives, `
 - **Radius**: sharp (`--radius: 0.125rem`) instead of shadcn's default soft `rounded-lg`.
 - **Shadow**: flat + bordered — all `--shadow-*` tokens are zeroed out in `@theme`; depth comes from `border`/`ring` utilities, not box-shadow.
 
-To add a new primitive: `npx shadcn@latest add <component>` from `webapp/`. It will already pick up these tokens without per-component overrides.
+To add a new primitive: `npx shadcn@latest add <component>` from the repo root. It will already pick up these tokens without per-component overrides.
 
 **Known CLI quirk**: `shadcn add` resolves the `@/*` import alias via the root `tsconfig.json`'s `compilerOptions.paths`/`baseUrl`, not the referenced `tsconfig.app.json`. If a future refactor removes those from the root config, the CLI will silently write files into a literal `./@/` directory instead of `src/`.
 

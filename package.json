@@ -48,7 +48,7 @@
   },
   "msw": {
     "workerDirectory": [
-      "webapp/public"
+      "public"
     ]
   }
 }
