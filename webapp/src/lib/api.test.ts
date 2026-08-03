@@ -1,4 +1,3 @@
-import { describe, expect, it, beforeEach } from 'vitest'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import { apiRequest, ApiRequestError, clearApiKey, setApiKey } from '@/lib/api'
@@ -39,10 +38,10 @@ describe('apiRequest', () => {
       ),
     )
 
-    const err = await apiRequest('/v1/test').catch((e) => e)
+    const err = await apiRequest('/v1/test').catch((e: unknown) => e)
     expect(err).toBeInstanceOf(ApiRequestError)
-    expect(err.status).toBe(401)
-    expect(err.code).toBe('Unauthorized')
+    expect((err as ApiRequestError).status).toBe(401)
+    expect((err as ApiRequestError).code).toBe('Unauthorized')
   })
 
   it('throws ApiRequestError on 429', async () => {
@@ -55,9 +54,9 @@ describe('apiRequest', () => {
       ),
     )
 
-    const err = await apiRequest('/v1/test').catch((e) => e)
+    const err = await apiRequest('/v1/test').catch((e: unknown) => e)
     expect(err).instanceOf(ApiRequestError)
-    expect(err.status).toBe(429)
+    expect((err as ApiRequestError).status).toBe(429)
   })
 
   it('clears key on 401', async () => {
