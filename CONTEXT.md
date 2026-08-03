@@ -16,6 +16,10 @@ _Avoid_: Course, exam type.
 The list of active certifications available for generating an Exam.
 _Avoid_: Certification list, course catalog.
 
+**Certification management**:
+The screens for creating and editing certifications (`POST`/`PUT /v1/certifications`), distinct from the Catalog. Lists only active certifications, since the API has no endpoint to list inactive ones; deactivating a certification removes it from this list too, with no way back to it in the UI.
+_Avoid_: Admin, admin panel.
+
 **Exam**:
 A generated, immutable practice exam belonging to a single certification.
 _Avoid_: Test, quiz, assessment.
