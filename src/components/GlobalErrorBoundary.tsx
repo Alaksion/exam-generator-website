@@ -42,6 +42,21 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     console.error('Global error boundary caught:', error, info.componentStack)
   }
 
+  componentDidMount() {
+    window.addEventListener('api:globalerror', this.handleGlobalError)
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('api:globalerror', this.handleGlobalError)
+  }
+
+  private handleGlobalError = (event: Event) => {
+    const detail = (event as CustomEvent<unknown>).detail
+    this.setState({
+      error: detail instanceof Error ? detail : new Error(String(detail)),
+    })
+  }
+
   private handleRetry = () => {
     this.setState({ error: null })
   }

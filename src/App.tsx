@@ -1,11 +1,25 @@
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { ApiKeyGate } from '@/components/ApiKeyGate'
 import { useAuth } from '@/lib/auth'
+import { UiShell } from '@/components/UiShell'
+import { ManagementListPage } from '@/pages/ManagementListPage'
+import { NewCertificationPage } from '@/pages/NewCertificationPage'
 
 function AuthenticatedApp() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <p className="text-gray-500">Mock Exams</p>
-    </div>
+    <Routes>
+      <Route element={<UiShell />}>
+        <Route index element={<Navigate to="/manage/certifications" replace />} />
+        <Route
+          path="/manage/certifications"
+          element={<ManagementListPage />}
+        />
+        <Route
+          path="/manage/certifications/new"
+          element={<NewCertificationPage />}
+        />
+      </Route>
+    </Routes>
   )
 }
 
