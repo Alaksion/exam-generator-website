@@ -23,7 +23,7 @@ servers:
       Stage:
         default: dev
   - url: http://localhost:3000/
-    description: Local SAM emulation.
+    description: Local SAM emulation (`npm start`).
 
 security:
   - ApiKeyAuth: []

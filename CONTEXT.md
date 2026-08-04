@@ -13,11 +13,11 @@ A catalog entry describing an exam type that can be generated, e.g. `AWS Certifi
 _Avoid_: Course, exam type.
 
 **Catalog**:
-The list of active certifications available for generating an Exam.
-_Avoid_: Certification list, course catalog.
+The list of active certifications (`isActive: true`) available for generating an Exam. The backend returns the full `GET /v1/certifications` catalog; the app filters by `isActive`.
+_Avoid_: Course, exam type, certification list.
 
 **Certification management**:
-The screens for creating and editing certifications (`POST`/`PUT /v1/certifications`), distinct from the Catalog. Lists only active certifications, since the API has no endpoint to list inactive ones; deactivating a certification removes it from this list too, with no way back to it in the UI.
+The screens for creating and editing certifications (`POST`/`PUT /v1/certifications`), distinct from the Catalog. Deactivating a certification (`isActive: false`) removes it from the Catalog with no way back to it in the UI, since there is no `DELETE` endpoint for certifications and the mgmt list offers no inactive filter.
 _Avoid_: Admin, admin panel.
 
 **Exam**:

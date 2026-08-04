@@ -1,0 +1,1143 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mock-Exam Generator Public API",
+    "version": "1.0.0",
+    "description": "Serverless backend for the mock-exam generator. Provides a catalog of IT\ncertifications (AWS, Azure, GCP), triggers asynchronous practice-exam\ngeneration, and serves the generated exams (canonical JSON + PDF download).\n",
+    "contact": {
+      "name": "exam-generator team"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://{ApiId}.execute-api.{Region}.amazonaws.com/{Stage}/",
+      "description": "Deployed stage (printed as `ApiUrl` by the SAM stack).",
+      "variables": {
+        "ApiId": {
+          "default": "abcdef1234"
+        },
+        "Region": {
+          "default": "us-east-1"
+        },
+        "Stage": {
+          "default": "dev"
+        }
+      }
+    },
+    {
+      "url": "http://localhost:3000/",
+      "description": "Local SAM emulation (`npm start`)."
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Service liveness."
+    },
+    {
+      "name": "Certifications",
+      "description": "Catalog entries describing IT certification exams."
+    },
+    {
+      "name": "Exams",
+      "description": "Generated practice exams (asynchronous lifecycle)."
+    }
+  ],
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check",
+        "operationId": "health",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service is healthy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    }
+                  }
+                },
+                "example": {
+                  "status": "ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/certifications": {
+      "post": {
+        "tags": [
+          "Certifications"
+        ],
+        "summary": "Create a certification",
+        "description": "Registers a new certification in the catalog. `provider` and `code`\nare immutable once created and must be unique together. Domain topic\nIDs are system-generated.\n",
+        "operationId": "createCertification",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificationInput"
+              },
+              "example": {
+                "provider": "aws",
+                "code": "CLF-C02",
+                "name": "AWS Certified Cloud Practitioner",
+                "description": "Foundational AWS cloud certification.",
+                "isActive": true,
+                "config": {
+                  "questionCount": 10,
+                  "difficultyDistribution": {
+                    "easy": 40,
+                    "medium": 40,
+                    "hard": 20
+                  },
+                  "domains": [
+                    {
+                      "name": "Cloud Concepts",
+                      "weight": 40,
+                      "topics": [
+                        "Cloud Value Proposition",
+                        "AWS Global Infrastructure"
+                      ]
+                    },
+                    {
+                      "name": "Technology",
+                      "weight": 30,
+                      "topics": [
+                        "Compute",
+                        "Storage",
+                        "Networking"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Certification created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certification"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Certifications"
+        ],
+        "summary": "List certifications",
+        "operationId": "listCertifications",
+        "responses": {
+          "200": {
+            "description": "List of certifications.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Certification"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/v1/certifications/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Certifications"
+        ],
+        "summary": "Get a certification",
+        "operationId": "getCertification",
+        "responses": {
+          "200": {
+            "description": "The requested certification.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certification"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Certifications"
+        ],
+        "summary": "Update a certification",
+        "description": "Updates mutable fields (`name`, `description`, `isActive`, `config`).\n`provider` and `code` are immutable and may not be present in the body.\n",
+        "operationId": "updateCertification",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificationUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated certification.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certification"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/v1/exams": {
+      "post": {
+        "tags": [
+          "Exams"
+        ],
+        "summary": "Request exam generation",
+        "description": "Creates an exam in `GENERATING` state and enqueues an asynchronous\ngeneration job. Returns the new exam ID immediately; poll\n`GET /v1/exams/{id}/status` to track completion.\n",
+        "operationId": "requestExamGeneration",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "certificationId"
+                ],
+                "properties": {
+                  "certificationId": {
+                    "$ref": "#/components/schemas/Uuid"
+                  }
+                }
+              },
+              "example": {
+                "certificationId": "8f9d5d0a-1f2b-4a3c-8e7d-4f5a6b7c8d9e"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Generation requested. Exam is GENERATING.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "status"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$ref": "#/components/schemas/Uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "GENERATING"
+                      ]
+                    }
+                  }
+                },
+                "example": {
+                  "id": "8f9d5d0a-1f2b-4a3c-8e7d-4f5a6b7c8d9e",
+                  "status": "GENERATING"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "404": {
+            "description": "Certification does not exist or is inactive.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Exams"
+        ],
+        "summary": "List exams",
+        "description": "Lists exams, newest first, filtered by status (default `READY`).\nPaginated with an opaque base64 cursor. When `certificationId` is\nprovided, results are scoped to that certification (status filter\nstill applies).\n",
+        "operationId": "listExams",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "GENERATING",
+                "READY",
+                "FAILED"
+              ],
+              "default": "READY"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Provider"
+            }
+          },
+          {
+            "name": "certificationId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Max items per page (1-100).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Opaque cursor from the previous page's `nextCursor`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of exams.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "cursor"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Exam"
+                      }
+                    },
+                    "cursor": {
+                      "type": "object",
+                      "required": [
+                        "nextCursor",
+                        "hasNextPage"
+                      ],
+                      "properties": {
+                        "nextCursor": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "hasNextPage": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/v1/exams/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Exams"
+        ],
+        "summary": "Get an exam (full payload)",
+        "description": "Returns the full canonical exam (metadata + questions) for a `READY`\nexam. Returns 409 while the exam is still generating or failed.\n",
+        "operationId": "getExam",
+        "responses": {
+          "200": {
+            "description": "The full exam payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FullExam"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/ExamNotReady"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Exams"
+        ],
+        "summary": "Delete an exam",
+        "description": "Permanently removes the exam's DynamoDB row and its S3 artifacts\n(canonical JSON and PDF).\n",
+        "operationId": "deleteExam",
+        "responses": {
+          "204": {
+            "description": "Exam deleted.",
+            "content": {}
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/v1/exams/{id}/status": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Exams"
+        ],
+        "summary": "Get exam generation status",
+        "description": "Poll this endpoint to track generation. Available for exams in any\nstate (GENERATING, READY, FAILED).\n",
+        "operationId": "getExamStatus",
+        "responses": {
+          "200": {
+            "description": "Exam lifecycle status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "status",
+                    "createdAt",
+                    "finishedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$ref": "#/components/schemas/Uuid"
+                    },
+                    "status": {
+                      "$ref": "#/components/schemas/ExamStatus"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "finishedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/v1/exams/{id}/download": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Exams"
+        ],
+        "summary": "Get exam PDF download URL",
+        "description": "Returns a short-lived pre-signed S3 URL (300s) for the generated PDF.\nReturns 409 while the exam is not READY.\n",
+        "operationId": "getExamDownloadUrl",
+        "responses": {
+          "200": {
+            "description": "Pre-signed download URL.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "downloadUrl",
+                    "expiresAt"
+                  ],
+                  "properties": {
+                    "downloadUrl": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/ExamNotReady"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API key required by all endpoints except `/v1/health`."
+      }
+    },
+    "parameters": {
+      "Id": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "description": "Resource UUID."
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "Resource not found.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "InvalidRequest": {
+        "description": "Request body or validation failed.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ExamNotReady": {
+        "description": "Exam exists but is not ready yet.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Request conflicts with current state.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Unexpected server error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Uuid": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "Provider": {
+        "type": "string",
+        "enum": [
+          "aws",
+          "azure",
+          "gcp"
+        ]
+      },
+      "Difficulty": {
+        "type": "string",
+        "enum": [
+          "easy",
+          "medium",
+          "hard"
+        ]
+      },
+      "DifficultyDistribution": {
+        "type": "object",
+        "description": "Integer percentages that must sum to 100.",
+        "required": [
+          "easy",
+          "medium",
+          "hard"
+        ],
+        "properties": {
+          "easy": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "medium": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "hard": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "Topic": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "KnowledgeDomain": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "weight",
+          "topics"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "integer",
+            "description": "Integer percentage weight.",
+            "minimum": 1
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Topic"
+            }
+          }
+        }
+      },
+      "CertificationConfig": {
+        "type": "object",
+        "required": [
+          "questionCount",
+          "difficultyDistribution",
+          "domains"
+        ],
+        "properties": {
+          "questionCount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "difficultyDistribution": {
+            "$ref": "#/components/schemas/DifficultyDistribution"
+          },
+          "domains": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Weights must sum to 100.",
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeDomain"
+            }
+          }
+        }
+      },
+      "Certification": {
+        "type": "object",
+        "required": [
+          "id",
+          "provider",
+          "code",
+          "name",
+          "description",
+          "isActive",
+          "config"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/Provider"
+          },
+          "code": {
+            "type": "string",
+            "description": "Provider-specific exam code, e.g. CLF-C02."
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the certification appears in public listings."
+          },
+          "config": {
+            "$ref": "#/components/schemas/CertificationConfig"
+          }
+        }
+      },
+      "CertificationInput": {
+        "type": "object",
+        "required": [
+          "provider",
+          "code",
+          "name",
+          "description",
+          "isActive",
+          "config"
+        ],
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/Provider"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "config": {
+            "$ref": "#/components/schemas/CertificationConfigInput"
+          }
+        }
+      },
+      "CertificationUpdate": {
+        "type": "object",
+        "description": "Mutable fields only. `provider` and `code` are immutable and rejected\nif present.\n",
+        "required": [
+          "name",
+          "description",
+          "isActive",
+          "config"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "config": {
+            "$ref": "#/components/schemas/CertificationConfigInput"
+          }
+        }
+      },
+      "CertificationConfigInput": {
+        "type": "object",
+        "required": [
+          "questionCount",
+          "difficultyDistribution",
+          "domains"
+        ],
+        "properties": {
+          "questionCount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "difficultyDistribution": {
+            "$ref": "#/components/schemas/DifficultyDistribution"
+          },
+          "domains": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Domain names and weights; topic IDs are system-generated on create/update.",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "weight",
+                "topics"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "weight": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "topics": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Topic names."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ExamStatus": {
+        "type": "string",
+        "enum": [
+          "GENERATING",
+          "READY",
+          "FAILED"
+        ]
+      },
+      "Exam": {
+        "type": "object",
+        "required": [
+          "id",
+          "certificationId",
+          "provider",
+          "title",
+          "status",
+          "createdAt",
+          "finishedAt"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "certificationId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/Provider"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ExamStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "s3KeyJson": {
+            "type": "string",
+            "description": "S3 key of canonical JSON artifact (READY exams)."
+          },
+          "s3KeyPdf": {
+            "type": "string",
+            "description": "S3 key of the generated PDF (READY exams)."
+          }
+        }
+      },
+      "AnswerOption": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "text",
+          "isCorrect"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "label": {
+            "type": "string",
+            "description": "Display label, e.g. A, B, C, D."
+          },
+          "text": {
+            "type": "string"
+          },
+          "isCorrect": {
+            "type": "boolean",
+            "description": "Exactly one option per question is true."
+          }
+        }
+      },
+      "Question": {
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "domain",
+          "domainId",
+          "topic",
+          "topicId",
+          "difficulty",
+          "text",
+          "options",
+          "explanation"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "domain": {
+            "type": "string"
+          },
+          "domainId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "topic": {
+            "type": "string"
+          },
+          "topicId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "difficulty": {
+            "$ref": "#/components/schemas/Difficulty"
+          },
+          "text": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "$ref": "#/components/schemas/AnswerOption"
+            }
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string",
+            "description": "Optional link to official documentation."
+          }
+        }
+      },
+      "FullExam": {
+        "type": "object",
+        "required": [
+          "schemaVersion",
+          "id",
+          "certificationId",
+          "title",
+          "status",
+          "createdAt",
+          "finishedAt",
+          "questions"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "certificationId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ExamStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error",
+          "message"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "CamelCase error code.",
+            "examples": [
+              "InvalidRequest",
+              "NotFound",
+              "ExamNotReady",
+              "Conflict",
+              "InternalError"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
