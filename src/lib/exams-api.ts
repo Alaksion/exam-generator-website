@@ -1,7 +1,5 @@
 import { api } from '@/lib/api'
 
-export type ExamStatus = 'GENERATING' | 'READY' | 'FAILED'
-
 export interface NewExam {
   id: string
   status: 'GENERATING'

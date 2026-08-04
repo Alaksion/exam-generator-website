@@ -17,10 +17,6 @@ export function CatalogPage() {
         toast.success('Preparing your exam')
         navigate(`/exams/${exam.id}/status`)
       },
-      onError: (err) => {
-        toast.error('Could not start the exam')
-        console.error('Failed to generate exam:', err)
-      },
     })
   }
 
@@ -32,6 +28,13 @@ export function CatalogPage() {
           Generate a new practice exam from an active certification.
         </p>
       </div>
+
+      {createExam.error && (
+        <NetworkErrorBlock
+          error={createExam.error}
+          onRetry={() => createExam.reset()}
+        />
+      )}
 
       {isPending ? (
         <p className="py-12 text-center text-sm text-muted-foreground">
@@ -78,11 +81,6 @@ export function CatalogPage() {
               </Button>
             </div>
           ))}
-          {createExam.error && (
-            <div className="sm:col-span-2">
-              <NetworkErrorBlock error={createExam.error} />
-            </div>
-          )}
         </div>
       )}
     </div>
