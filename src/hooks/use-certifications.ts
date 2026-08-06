@@ -41,8 +41,9 @@ export function useUpdateCertification() {
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: CertificationUpdate }) =>
       updateCertification(id, input),
-    onSuccess: () => {
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['certifications'] })
+      queryClient.invalidateQueries({ queryKey: ['certification', id] })
     },
   })
 }

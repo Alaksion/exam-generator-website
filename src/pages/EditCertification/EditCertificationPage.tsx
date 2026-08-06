@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { CertificationForm } from '@/components/certifications/CertificationForm'
@@ -30,6 +31,11 @@ export function EditCertificationPage() {
   const navigate = useNavigate()
   const { data, error, isPending, refetch } = useCertification(id)
   const updateCertification = useUpdateCertification()
+
+  const initialValues = useMemo(
+    () => (data ? toFormValues(data) : undefined),
+    [data],
+  )
 
   function handleSubmit(values: CreateFormValues) {
     const { provider: _provider, code: _code, ...input } = values
@@ -65,7 +71,7 @@ export function EditCertificationPage() {
         </p>
       </div>
       <CertificationForm
-        initialValues={toFormValues(data)}
+        initialValues={initialValues}
         onSubmit={handleSubmit}
         isSubmitting={updateCertification.isPending}
       />
