@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -25,6 +25,7 @@ import {
 export interface CertificationFormProps {
   onSubmit: (values: CreateFormValues) => void
   isSubmitting?: boolean
+  initialValues?: CreateFormValues
 }
 
 const emptyDomain = () => ({
@@ -33,22 +34,33 @@ const emptyDomain = () => ({
   topics: [''],
 })
 
+const defaultValues = (): CreateFormValues => ({
+  provider: 'aws',
+  code: '',
+  name: '',
+  description: '',
+  isActive: true,
+  config: {
+    questionCount: 10,
+    difficultyDistribution: { easy: 40, medium: 40, hard: 20 },
+    domains: [emptyDomain()],
+  },
+})
+
 export function CertificationForm({
   onSubmit,
   isSubmitting = false,
+  initialValues,
 }: CertificationFormProps) {
-  const [form, setForm] = useState<CreateFormValues>({
-    provider: 'aws',
-    code: '',
-    name: '',
-    description: '',
-    isActive: true,
-    config: {
-      questionCount: 10,
-      difficultyDistribution: { easy: 40, medium: 40, hard: 20 },
-      domains: [emptyDomain()],
-    },
-  })
+  const [form, setForm] = useState<CreateFormValues>(
+    initialValues ?? defaultValues(),
+  )
+
+  const isEdit = Boolean(initialValues)
+
+  useEffect(() => {
+    if (initialValues) setForm(initialValues)
+  }, [initialValues])
 
   const result = createFormSchema.safeParse(form)
   const isValid = result.success
@@ -69,36 +81,40 @@ export function CertificationForm({
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field>
-          <FieldLabel>Provider</FieldLabel>
-          <Select
-            value={form.provider}
-            onValueChange={(value) =>
-              set('provider', value as CreateFormValues['provider'])
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PROVIDERS.map((p) => (
-                <SelectItem key={p.value} value={p.value}>
-                  {p.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        {!isEdit && (
+          <>
+            <Field>
+              <FieldLabel>Provider</FieldLabel>
+              <Select
+                value={form.provider}
+                onValueChange={(value) =>
+                  set('provider', value as CreateFormValues['provider'])
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROVIDERS.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
 
-        <Field>
-          <FieldLabel htmlFor="code">Code</FieldLabel>
-          <Input
-            id="code"
-            value={form.code}
-            placeholder="e.g. CLF-C02"
-            onChange={(e) => set('code', e.target.value)}
-          />
-        </Field>
+            <Field>
+              <FieldLabel htmlFor="code">Code</FieldLabel>
+              <Input
+                id="code"
+                value={form.code}
+                placeholder="e.g. CLF-C02"
+                onChange={(e) => set('code', e.target.value)}
+              />
+            </Field>
+          </>
+        )}
       </div>
 
       <Field>
@@ -257,7 +273,13 @@ export function CertificationForm({
 
       <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="submit" disabled={!isValid || isSubmitting}>
-          {isSubmitting ? 'Creating…' : 'Create certification'}
+          {isSubmitting
+            ? isEdit
+              ? 'Saving…'
+              : 'Creating…'
+            : isEdit
+              ? 'Save changes'
+              : 'Create certification'}
         </Button>
       </div>
     </form>

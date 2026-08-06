@@ -57,7 +57,14 @@ export function ManagementListPage() {
           <TableBody>
             {data?.items.map((cert) => (
               <TableRow key={cert.id}>
-                <TableCell className="font-medium">{cert.name}</TableCell>
+                <TableCell className="font-medium">
+                  <Link
+                    to={`/manage/certifications/${cert.id}/edit`}
+                    className="hover:underline"
+                  >
+                    {cert.name}
+                  </Link>
+                </TableCell>
                 <TableCell>{cert.provider.toUpperCase()}</TableCell>
                 <TableCell>{cert.code}</TableCell>
                 <TableCell>
