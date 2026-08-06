@@ -1,7 +1,7 @@
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import { setApiKey, clearApiKey, ApiRequestError } from '@/lib/api'
-import { createExam, getExam, getExamDownload, getExamStatus } from '@/lib/exams-api'
+import { createExam, deleteExam, getExam, getExamDownload, getExamStatus, listExams } from '@/lib/exams-api'
 
 const server = setupServer()
 
@@ -202,5 +202,100 @@ describe('getExamDownload', () => {
     const err = await getExamDownload('nope').catch((e: unknown) => e)
     expect(err).toBeInstanceOf(ApiRequestError)
     expect((err as ApiRequestError).status).toBe(409)
+  })
+})
+
+describe('listExams', () => {
+  it('GETs exams with a status query param', async () => {
+    setApiKey('my-key')
+    let capturedSearch = ''
+
+    server.use(
+      http.get('/v1/exams', ({ request }) => {
+        capturedSearch = new URL(request.url).search
+        return HttpResponse.json({
+          items: [],
+          cursor: { nextCursor: null, hasNextPage: false },
+        })
+      }),
+    )
+
+    await listExams({ status: 'READY' })
+
+    expect(capturedSearch).toContain('status=READY')
+  })
+
+  it('omits empty filters from the query string', async () => {
+    let capturedSearch = ''
+
+    server.use(
+      http.get('/v1/exams', ({ request }) => {
+        capturedSearch = new URL(request.url).search
+        return HttpResponse.json({
+          items: [],
+          cursor: { nextCursor: null, hasNextPage: false },
+        })
+      }),
+    )
+
+    await listExams({})
+
+    expect(capturedSearch).toBe('')
+  })
+
+  it('includes provider and certificationId when set', async () => {
+    let capturedSearch = ''
+
+    server.use(
+      http.get('/v1/exams', ({ request }) => {
+        capturedSearch = new URL(request.url).search
+        return HttpResponse.json({
+          items: [],
+          cursor: { nextCursor: null, hasNextPage: false },
+        })
+      }),
+    )
+
+    await listExams({ status: 'FAILED', provider: 'aws', certificationId: 'c1' })
+
+    expect(capturedSearch).toContain('status=FAILED')
+    expect(capturedSearch).toContain('provider=aws')
+    expect(capturedSearch).toContain('certificationId=c1')
+  })
+})
+
+describe('deleteExam', () => {
+  it('DELETEs the exam and resolves on 204', async () => {
+    setApiKey('my-key')
+    let capturedMethod = ''
+    let capturedPath = ''
+
+    server.use(
+      http.delete('/v1/exams/:id', ({ request, params }) => {
+        capturedMethod = request.method
+        capturedPath = new URL(`/v1/exams/${params.id}`, 'http://test').pathname
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+
+    await deleteExam('e0000000-0000-0000-0000-000000000001')
+
+    expect(capturedMethod).toBe('DELETE')
+    expect(capturedPath).toBe('/v1/exams/e0000000-0000-0000-0000-000000000001')
+  })
+
+  it('throws ApiRequestError with status 404 when the exam is unknown', async () => {
+    server.use(
+      http.delete('/v1/exams/:id', () =>
+        HttpResponse.json(
+          { error: 'NotFound', message: 'Exam not found.' },
+          { status: 404 },
+        ),
+      ),
+    )
+
+    const err = await deleteExam('nope').catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ApiRequestError)
+    expect((err as ApiRequestError).status).toBe(404)
   })
 })
