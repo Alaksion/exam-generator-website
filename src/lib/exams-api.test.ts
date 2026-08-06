@@ -1,7 +1,7 @@
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import { setApiKey, clearApiKey, ApiRequestError } from '@/lib/api'
-import { createExam, getExam, getExamStatus } from '@/lib/exams-api'
+import { createExam, getExam, getExamDownload, getExamStatus } from '@/lib/exams-api'
 
 const server = setupServer()
 
@@ -162,6 +162,44 @@ describe('getExam', () => {
     )
 
     const err = await getExam('nope').catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ApiRequestError)
+    expect((err as ApiRequestError).status).toBe(409)
+  })
+})
+
+describe('getExamDownload', () => {
+  it('GETs the presigned download URL for a ready exam', async () => {
+    setApiKey('my-key')
+    let capturedPath = ''
+
+    server.use(
+      http.get('/v1/exams/:id/download', ({ params }) => {
+        capturedPath = new URL(`/v1/exams/${params.id}/download`, 'http://test').pathname
+        return HttpResponse.json(
+          { downloadUrl: 'https://example.com/exam.pdf?sig=abc', expiresAt: '2026-02-01T00:00:00Z' },
+          { status: 200 },
+        )
+      }),
+    )
+
+    const result = await getExamDownload('e0000000-0000-0000-0000-000000000001')
+
+    expect(capturedPath).toBe('/v1/exams/e0000000-0000-0000-0000-000000000001/download')
+    expect(result.downloadUrl).toContain('https://example.com')
+    expect(result.expiresAt).toBe('2026-02-01T00:00:00Z')
+  })
+
+  it('throws ApiRequestError with status 409 when the exam is not ready', async () => {
+    server.use(
+      http.get('/v1/exams/:id/download', () =>
+        HttpResponse.json(
+          { error: 'ExamNotReady', message: 'The exam is not ready yet.' },
+          { status: 409 },
+        ),
+      ),
+    )
+
+    const err = await getExamDownload('nope').catch((e: unknown) => e)
     expect(err).toBeInstanceOf(ApiRequestError)
     expect((err as ApiRequestError).status).toBe(409)
   })

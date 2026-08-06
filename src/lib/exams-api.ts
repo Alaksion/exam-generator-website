@@ -24,3 +24,12 @@ export function getExamStatus(id: string): Promise<ExamStatusInfo> {
 export function getExam(id: string): Promise<FullExam> {
   return api.get<FullExam>(`/v1/exams/${id}`)
 }
+
+export interface ExamDownload {
+  downloadUrl: string
+  expiresAt: string
+}
+
+export function getExamDownload(id: string): Promise<ExamDownload> {
+  return api.get<ExamDownload>(`/v1/exams/${id}/download`)
+}

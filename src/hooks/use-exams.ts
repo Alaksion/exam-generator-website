@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { createExam, getExam } from '@/lib/exams-api'
+import { createExam, getExam, getExamDownload } from '@/lib/exams-api'
 
 export function useCreateExam() {
   return useMutation({
@@ -12,5 +12,11 @@ export function useExam(id: string | undefined) {
     queryKey: ['exam', id],
     queryFn: () => getExam(id as string),
     enabled: Boolean(id),
+  })
+}
+
+export function useExamDownload() {
+  return useMutation({
+    mutationFn: (id: string) => getExamDownload(id),
   })
 }
