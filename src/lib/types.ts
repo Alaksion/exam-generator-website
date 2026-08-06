@@ -118,3 +118,10 @@ export interface CertificationInput {
   isActive: boolean
   config: CertificationConfigInput
 }
+
+export interface CertificationUpdate {
+  name: string
+  description: string
+  isActive: boolean
+  config: CertificationConfigInput
+}
