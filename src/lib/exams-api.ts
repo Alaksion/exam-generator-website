@@ -1,10 +1,9 @@
 import { api } from '@/lib/api'
-
-export type ExamStatus = 'GENERATING' | 'READY' | 'FAILED'
+import type { ExamStatus, FullExam } from '@/lib/types'
 
 export interface NewExam {
   id: string
-  status: 'GENERATING'
+  status: ExamStatus
 }
 
 export interface ExamStatusInfo {
@@ -20,4 +19,8 @@ export function createExam(certificationId: string): Promise<NewExam> {
 
 export function getExamStatus(id: string): Promise<ExamStatusInfo> {
   return api.get<ExamStatusInfo>(`/v1/exams/${id}/status`)
+}
+
+export function getExam(id: string): Promise<FullExam> {
+  return api.get<FullExam>(`/v1/exams/${id}`)
 }

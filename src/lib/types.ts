@@ -1,5 +1,53 @@
 export type Provider = 'aws' | 'azure' | 'gcp'
 export type Difficulty = 'easy' | 'medium' | 'hard'
+export type ExamStatus = 'GENERATING' | 'READY' | 'FAILED'
+
+export interface AnswerOption {
+  id: string
+  label: string
+  text: string
+  isCorrect: boolean
+}
+
+export interface Question {
+  id: string
+  number: number
+  domain: string
+  domainId: string
+  topic: string
+  topicId: string
+  difficulty: Difficulty
+  text: string
+  options: AnswerOption[]
+  explanation: string
+  reference?: string
+}
+
+export interface FullExam {
+  schemaVersion: string
+  id: string
+  certificationId: string
+  title: string
+  status: ExamStatus
+  createdAt: string
+  finishedAt: string | null
+  questions: Question[]
+}
+
+export interface DomainBreakdown {
+  domain: string
+  domainId: string
+  correct: number
+  total: number
+}
+
+export interface Attempt {
+  examId: string
+  submittedAt: string
+  answers: Record<string, string>
+  score: number
+  breakdown: DomainBreakdown[]
+}
 
 export interface Topic {
   id: string

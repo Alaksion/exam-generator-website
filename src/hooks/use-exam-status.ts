@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getExamStatus, type ExamStatus } from '@/lib/exams-api'
+import { getExamStatus } from '@/lib/exams-api'
+import type { ExamStatus } from '@/lib/types'
 
 const BASE_DELAY_MS = 2000
 const MAX_DELAY_MS = 10_000
