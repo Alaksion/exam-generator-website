@@ -118,3 +118,8 @@ export interface CertificationInput {
   isActive: boolean
   config: CertificationConfigInput
 }
+
+export type CertificationUpdate = Omit<
+  CertificationInput,
+  'provider' | 'code'
+>

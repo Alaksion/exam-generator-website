@@ -5,6 +5,7 @@ import { UiShell } from "@/components/UiShell";
 import { CatalogPage } from "@/pages/Catalog/CatalogPage";
 import { ManagementListPage } from "@/pages/ManageCertification/ManagementListPage";
 import { NewCertificationPage } from "@/pages/NewCertification/NewCertificationPage";
+import { EditCertificationPage } from "@/pages/EditCertification/EditCertificationPage";
 import { ExamStatusPage } from "@/pages/ExamStatus/ExamStatusPage";
 import { QuizPage } from "@/pages/Quiz/QuizPage";
 import { ReviewPage } from "@/pages/Review/ReviewPage";
@@ -23,6 +24,10 @@ function AuthenticatedApp() {
         <Route
           path="/manage/certifications/new"
           element={<NewCertificationPage />}
+        />
+        <Route
+          path="/manage/certifications/:id/edit"
+          element={<EditCertificationPage />}
         />
       </Route>
     </Routes>
