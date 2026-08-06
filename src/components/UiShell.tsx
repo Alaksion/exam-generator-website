@@ -25,6 +25,13 @@ export function UiShell() {
               Catalog
             </a>
             <a
+              href="/history"
+              aria-current={location.pathname.startsWith('/history') ? 'page' : undefined}
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground"
+            >
+              History
+            </a>
+            <a
               href="/manage/certifications"
               aria-current={location.pathname.startsWith('/manage') ? 'page' : undefined}
               className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground"
@@ -52,6 +59,13 @@ export function UiShell() {
         </div>
         {menuOpen && (
           <nav className="border-t px-4 py-2 md:hidden" aria-label="Mobile navigation">
+            <a
+              href="/history"
+              onClick={closeMenu}
+              className="block rounded-md px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              History
+            </a>
             <a
               href="/manage/certifications"
               onClick={closeMenu}

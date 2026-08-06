@@ -34,6 +34,27 @@ export interface FullExam {
   questions: Question[]
 }
 
+export interface ExamListItem {
+  id: string
+  certificationId: string
+  provider: Provider
+  title: string
+  status: ExamStatus
+  createdAt: string
+  finishedAt: string | null
+}
+
+export interface ExamPage {
+  items: ExamListItem[]
+  cursor: { nextCursor: string | null; hasNextPage: boolean }
+}
+
+export interface ExamListParams {
+  status?: string
+  provider?: Provider
+  certificationId?: string
+}
+
 export interface DomainBreakdown {
   domain: string
   domainId: string

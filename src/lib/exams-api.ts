@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { ExamStatus, FullExam } from '@/lib/types'
+import type { ExamListParams, ExamPage, ExamStatus, FullExam } from '@/lib/types'
 
 export interface NewExam {
   id: string
@@ -15,6 +15,21 @@ export interface ExamStatusInfo {
 
 export function createExam(certificationId: string): Promise<NewExam> {
   return api.post<NewExam>('/v1/exams', { certificationId })
+}
+
+export function listExams(params: ExamListParams): Promise<ExamPage> {
+  const search = new URLSearchParams()
+  if (params.status) search.set('status', params.status)
+  if (params.provider) search.set('provider', params.provider)
+  if (params.certificationId) {
+    search.set('certificationId', params.certificationId)
+  }
+  const qs = search.toString()
+  return api.get<ExamPage>(`/v1/exams${qs ? `?${qs}` : ''}`)
+}
+
+export function deleteExam(id: string): Promise<void> {
+  return api.delete<void>(`/v1/exams/${id}`)
 }
 
 export function getExamStatus(id: string): Promise<ExamStatusInfo> {
