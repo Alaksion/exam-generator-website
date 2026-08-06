@@ -65,4 +65,75 @@ describe('CertificationForm', () => {
     expect(onSubmit).toHaveBeenCalledTimes(1)
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining(baseValues))
   })
+
+  describe('deactivation confirmation', () => {
+    it('opens a confirmation dialog before toggling isActive off', async () => {
+      const user = userEvent.setup()
+      render(
+        <CertificationForm
+          initialValues={baseValues}
+          onSubmit={() => undefined}
+        />,
+      )
+
+      await user.click(screen.getByRole('checkbox', { name: 'Active' }))
+
+      expect(
+        screen.getByRole('heading', { name: 'Deactivate certification' }),
+      ).toBeInTheDocument()
+    })
+
+    it('confirming deactivates the certification', async () => {
+      const user = userEvent.setup()
+      render(
+        <CertificationForm
+          initialValues={baseValues}
+          onSubmit={() => undefined}
+        />,
+      )
+
+      await user.click(screen.getByRole('checkbox', { name: 'Active' }))
+      await user.click(screen.getByRole('button', { name: 'Deactivate' }))
+
+      expect(screen.getByRole('checkbox', { name: 'Active' })).not.toBeChecked()
+      expect(
+        screen.queryByRole('heading', { name: 'Deactivate certification' }),
+      ).not.toBeInTheDocument()
+    })
+
+    it('cancelling reverts the toggle to on', async () => {
+      const user = userEvent.setup()
+      render(
+        <CertificationForm
+          initialValues={baseValues}
+          onSubmit={() => undefined}
+        />,
+      )
+
+      await user.click(screen.getByRole('checkbox', { name: 'Active' }))
+      await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+      expect(screen.getByRole('checkbox', { name: 'Active' })).toBeChecked()
+      expect(
+        screen.queryByRole('heading', { name: 'Deactivate certification' }),
+      ).not.toBeInTheDocument()
+    })
+
+    it('toggling isActive on requires no confirmation', async () => {
+      const user = userEvent.setup()
+      render(
+        <CertificationForm
+          initialValues={{ ...baseValues, isActive: false }}
+          onSubmit={() => undefined}
+        />,
+      )
+
+      await user.click(screen.getByRole('checkbox', { name: 'Active' }))
+
+      expect(
+        screen.queryByRole('heading', { name: 'Deactivate certification' }),
+      ).not.toBeInTheDocument()
+      expect(screen.getByRole('checkbox', { name: 'Active' })).toBeChecked()
+    })
+  })
 })
