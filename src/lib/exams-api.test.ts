@@ -1,7 +1,7 @@
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import { setApiKey, clearApiKey, ApiRequestError } from '@/lib/api'
-import { createExam } from '@/lib/exams-api'
+import { createExam, getExamStatus } from '@/lib/exams-api'
 
 const server = setupServer()
 
@@ -73,5 +73,49 @@ describe('createExam', () => {
     const err = await createExam('c0000000-0000-0000-0000-000000000001').catch((e: unknown) => e)
     expect(err).toBeInstanceOf(ApiRequestError)
     expect((err as ApiRequestError).status).toBe(409)
+  })
+})
+
+describe('getExamStatus', () => {
+  it('GETs the exam status by id', async () => {
+    setApiKey('my-key')
+    let capturedPath = ''
+
+    server.use(
+      http.get('/v1/exams/:id/status', ({ params }) => {
+        capturedPath = new URL(
+          `/v1/exams/${params.id}/status`,
+          'http://test',
+        ).pathname
+        return HttpResponse.json(
+          { id: params.id, status: 'GENERATING', createdAt: '2026-01-01T00:00:00Z', finishedAt: null },
+        )
+      }),
+    )
+
+    const result = await getExamStatus('e0000000-0000-0000-0000-000000000001')
+
+    expect(capturedPath).toBe('/v1/exams/e0000000-0000-0000-0000-000000000001/status')
+    expect(result).toEqual({
+      id: 'e0000000-0000-0000-0000-000000000001',
+      status: 'GENERATING',
+      createdAt: '2026-01-01T00:00:00Z',
+      finishedAt: null,
+    })
+  })
+
+  it('throws ApiRequestError with status 404 when the exam is unknown', async () => {
+    server.use(
+      http.get('/v1/exams/:id/status', () =>
+        HttpResponse.json(
+          { error: 'NotFound', message: 'Exam not found.' },
+          { status: 404 },
+        ),
+      ),
+    )
+
+    const err = await getExamStatus('nope').catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ApiRequestError)
+    expect((err as ApiRequestError).status).toBe(404)
   })
 })
