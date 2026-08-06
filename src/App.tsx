@@ -8,6 +8,7 @@ import { NewCertificationPage } from "@/pages/NewCertification/NewCertificationP
 import { ExamStatusPage } from "@/pages/ExamStatus/ExamStatusPage";
 import { QuizPage } from "@/pages/Quiz/QuizPage";
 import { ReviewPage } from "@/pages/Review/ReviewPage";
+import { HistoryPage } from "@/pages/History/HistoryPage";
 
 function AuthenticatedApp() {
   return (
@@ -17,6 +18,7 @@ function AuthenticatedApp() {
         <Route path="/exams/:id/status" element={<ExamStatusPage />} />
         <Route path="/exams/:id" element={<QuizPage />} />
         <Route path="/exams/:id/results" element={<ReviewPage />} />
+        <Route path="/history" element={<HistoryPage />} />
         <Route path="/manage/certifications" element={<ManagementListPage />} />
         <Route
           path="/manage/certifications/new"
