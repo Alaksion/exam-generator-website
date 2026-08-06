@@ -4,6 +4,14 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -55,6 +63,7 @@ export function CertificationForm({
   const [form, setForm] = useState<CreateFormValues>(
     initialValues ?? defaultValues(),
   )
+  const [deactivateOpen, setDeactivateOpen] = useState(false)
 
   const isEdit = Boolean(initialValues)
 
@@ -76,6 +85,19 @@ export function CertificationForm({
     e.preventDefault()
     if (!result.success) return
     onSubmit(result.data)
+  }
+
+  function handleIsActiveChange(checked: boolean) {
+    if (form.isActive && !checked) {
+      setDeactivateOpen(true)
+      return
+    }
+    set('isActive', checked)
+  }
+
+  function confirmDeactivate() {
+    set('isActive', false)
+    setDeactivateOpen(false)
   }
 
   return (
@@ -144,7 +166,7 @@ export function CertificationForm({
             id="isActive"
             checked={form.isActive}
             className="size-4 rounded border-input accent-primary"
-            onChange={(e) => set('isActive', e.target.checked)}
+            onChange={(e) => handleIsActiveChange(e.target.checked)}
           />
           <Label htmlFor="isActive">Active</Label>
         </div>
@@ -282,6 +304,30 @@ export function CertificationForm({
               : 'Create certification'}
         </Button>
       </div>
+
+      <Dialog open={deactivateOpen} onOpenChange={setDeactivateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Deactivate certification</DialogTitle>
+            <DialogDescription>
+              Deactivating removes this certification from the management list,
+              with no way back to it in the UI.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeactivateOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" onClick={confirmDeactivate}>
+              Deactivate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </form>
   )
 }
