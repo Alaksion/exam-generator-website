@@ -15,7 +15,9 @@ export function CatalogPage() {
     createExam.mutate(certificationId, {
       onSuccess: (exam) => {
         toast.success('Preparing your exam')
-        navigate(`/exams/${exam.id}/status`)
+        navigate(`/exams/${exam.id}/status`, {
+          state: { certificationId },
+        })
       },
     })
   }
