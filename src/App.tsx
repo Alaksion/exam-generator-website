@@ -6,6 +6,7 @@ import { CatalogPage } from "@/pages/Catalog/CatalogPage";
 import { ManagementListPage } from "@/pages/ManageCertification/ManagementListPage";
 import { NewCertificationPage } from "@/pages/NewCertification/NewCertificationPage";
 import { ExamStatusPage } from "@/pages/ExamStatus/ExamStatusPage";
+import { QuizPage } from "@/pages/Quiz/QuizPage";
 
 function AuthenticatedApp() {
   return (
@@ -13,6 +14,7 @@ function AuthenticatedApp() {
       <Route element={<UiShell />}>
         <Route index element={<CatalogPage />} />
         <Route path="/exams/:id/status" element={<ExamStatusPage />} />
+        <Route path="/exams/:id" element={<QuizPage />} />
         <Route path="/manage/certifications" element={<ManagementListPage />} />
         <Route
           path="/manage/certifications/new"
