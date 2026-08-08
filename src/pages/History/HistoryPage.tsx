@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useCertifications } from '@/hooks/use-certifications'
 import { useDeleteExam, useExamDownload, useExams } from '@/hooks/use-exams'
 import { NetworkErrorBlock } from '@/components/NetworkErrorBlock'
 import { Badge } from '@/components/ui/badge'
@@ -30,21 +29,15 @@ import {
 } from '@/components/ui/table'
 import type { ExamListItem, Provider } from '@/lib/types'
 
-const STATUS_OPTIONS = ['READY', 'GENERATING', 'FAILED', 'ALL'] as const
 const ALL = 'ALL'
 const PROVIDER_OPTIONS: Array<Provider> = ['aws', 'azure', 'gcp']
 
 export function HistoryPage() {
-  const [status, setStatus] = useState<string>('READY')
   const [provider, setProvider] = useState<Provider | typeof ALL>(ALL)
-  const [certificationId, setCertificationId] = useState<string>(ALL)
   const [pendingDelete, setPendingDelete] = useState<ExamListItem | null>(null)
 
-  const certifications = useCertifications()
   const exams = useExams({
-    status: status === ALL ? undefined : status,
     provider: provider === ALL ? undefined : provider,
-    certificationId: certificationId === ALL ? undefined : certificationId,
   })
   const download = useExamDownload()
   const deleteExam = useDeleteExam()
@@ -75,19 +68,6 @@ export function HistoryPage() {
 
   const filterBar = (
     <div className="flex flex-wrap items-center gap-2">
-      <Select value={status} onValueChange={(v) => setStatus(v ?? 'READY')}>
-        <SelectTrigger size="sm" aria-label="Filter by status">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {STATUS_OPTIONS.map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
       <Select
         value={provider}
         onValueChange={(v) => setProvider((v ?? ALL) as Provider | typeof ALL)}
@@ -95,25 +75,11 @@ export function HistoryPage() {
         <SelectTrigger size="sm" aria-label="Filter by provider">
           <SelectValue />
         </SelectTrigger>
-<SelectContent>
+        <SelectContent>
           <SelectItem value={ALL}>All providers</SelectItem>
           {PROVIDER_OPTIONS.map((p) => (
             <SelectItem key={p} value={p}>
               {p.toUpperCase()}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={certificationId} onValueChange={(v) => setCertificationId(v ?? 'ALL')}>
-        <SelectTrigger size="sm" aria-label="Filter by certification">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ALL">All certifications</SelectItem>
-          {(certifications.data?.items ?? []).map((cert) => (
-            <SelectItem key={cert.id} value={cert.id}>
-              {cert.name}
             </SelectItem>
           ))}
         </SelectContent>
@@ -158,7 +124,9 @@ export function HistoryPage() {
           <TableBody>
             {exams.data?.items.map((exam) => (
               <TableRow key={exam.id}>
-                <TableCell className="font-medium">{exam.title}</TableCell>
+                <TableCell className="max-w-xs truncate font-medium">
+                  {exam.title}
+                </TableCell>
                 <TableCell>{exam.provider.toUpperCase()}</TableCell>
                 <TableCell>
                   <Badge variant="secondary">{exam.status}</Badge>
