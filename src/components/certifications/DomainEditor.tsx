@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { NumberInput } from '@/components/ui/number-input'
 import type { CreateFormValues } from '@/lib/certification-schema'
 
 type Domain = CreateFormValues['config']['domains'][number]
@@ -51,13 +52,10 @@ export function DomainEditor({
         </Label>
         <Label className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">Weight</span>
-          <Input
-            type="number"
+          <NumberInput
             min={0}
             value={domain.weight}
-            onChange={(e) =>
-              onUpdate({ ...domain, weight: Number(e.target.value) })
-            }
+            onValueChange={(next) => onUpdate({ ...domain, weight: next })}
           />
         </Label>
       </div>
