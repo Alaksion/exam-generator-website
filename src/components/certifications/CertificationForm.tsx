@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { NumberInput } from '@/components/ui/number-input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
@@ -175,17 +176,13 @@ export function CertificationForm({
       <div className="grid gap-4 sm:grid-cols-3">
         <Field>
           <FieldLabel htmlFor="questionCount">Question count</FieldLabel>
-          <Input
+          <NumberInput
             id="questionCount"
-            type="number"
             min={1}
             max={100}
             value={form.config.questionCount}
-            onChange={(e) =>
-              setConfig((c) => ({
-                ...c,
-                questionCount: Number(e.target.value),
-              }))
+            onValueChange={(next) =>
+              setConfig((c) => ({ ...c, questionCount: next }))
             }
           />
           {result.success === false &&
@@ -201,30 +198,29 @@ export function CertificationForm({
         </Field>
 
         <Field className="sm:col-span-2">
-          <p className="text-sm font-medium">Difficulty distribution (%)</p>
-          <div className="flex items-center gap-3">
+          <FieldLabel>Difficulty distribution (%)</FieldLabel>
+          <div className="flex flex-1 items-end gap-3">
             {(['easy', 'medium', 'hard'] as const).map((level) => (
               <Label key={level} className="flex flex-1 flex-col gap-1">
                 <span className="text-xs text-muted-foreground capitalize">
                   {level}
                 </span>
-                <Input
-                  type="number"
+                <NumberInput
                   min={0}
                   value={form.config.difficultyDistribution[level]}
-                  onChange={(e) =>
+                  onValueChange={(next) =>
                     setConfig((c) => ({
                       ...c,
                       difficultyDistribution: {
                         ...c.difficultyDistribution,
-                        [level]: Number(e.target.value),
+                        [level]: next,
                       },
                     }))
                   }
                 />
               </Label>
             ))}
-            <div className="text-sm font-medium tabular-nums">
+            <div className="flex h-8 shrink-0 items-center text-sm font-medium tabular-nums">
               = {difficultyTotalFor(form.config.difficultyDistribution)}%
             </div>
           </div>
