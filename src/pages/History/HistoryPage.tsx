@@ -29,14 +29,17 @@ import {
 } from '@/components/ui/table'
 import type { ExamListItem, Provider } from '@/lib/types'
 
+const STATUS_OPTIONS = ['READY', 'GENERATING', 'FAILED', 'ALL'] as const
 const ALL = 'ALL'
 const PROVIDER_OPTIONS: Array<Provider> = ['aws', 'azure', 'gcp']
 
 export function HistoryPage() {
+  const [status, setStatus] = useState<string>('READY')
   const [provider, setProvider] = useState<Provider | typeof ALL>(ALL)
   const [pendingDelete, setPendingDelete] = useState<ExamListItem | null>(null)
 
   const exams = useExams({
+    status: status === ALL ? undefined : status,
     provider: provider === ALL ? undefined : provider,
   })
   const download = useExamDownload()
@@ -68,6 +71,19 @@ export function HistoryPage() {
 
   const filterBar = (
     <div className="flex flex-wrap items-center gap-2">
+      <Select value={status} onValueChange={(v) => setStatus(v ?? 'READY')}>
+        <SelectTrigger size="sm" aria-label="Filter by status">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {STATUS_OPTIONS.map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       <Select
         value={provider}
         onValueChange={(v) => setProvider((v ?? ALL) as Provider | typeof ALL)}
