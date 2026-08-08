@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { NumberInput } from '@/components/ui/number-input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -11,16 +11,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { DomainEditor } from '@/components/certifications/DomainEditor'
+} from "@/components/ui/select";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { DomainEditor } from "@/components/certifications/DomainEditor";
 import {
   createFormSchema,
   difficultySumMessage,
@@ -29,32 +29,32 @@ import {
   domainWeightTotalFor,
   PROVIDERS,
   type CreateFormValues,
-} from '@/lib/certification-schema'
+} from "@/lib/certification-schema";
 
 export interface CertificationFormProps {
-  onSubmit: (values: CreateFormValues) => void
-  isSubmitting?: boolean
-  initialValues?: CreateFormValues
+  onSubmit: (values: CreateFormValues) => void;
+  isSubmitting?: boolean;
+  initialValues?: CreateFormValues;
 }
 
 const emptyDomain = () => ({
-  name: '',
+  name: "",
   weight: 100,
-  topics: [''],
-})
+  topics: [""],
+});
 
 const defaultValues = (): CreateFormValues => ({
-  provider: 'aws',
-  code: '',
-  name: '',
-  description: '',
+  provider: "aws",
+  code: "",
+  name: "",
+  description: "",
   isActive: true,
   config: {
     questionCount: 10,
     difficultyDistribution: { easy: 40, medium: 40, hard: 20 },
     domains: [emptyDomain()],
   },
-})
+});
 
 export function CertificationForm({
   onSubmit,
@@ -63,42 +63,44 @@ export function CertificationForm({
 }: CertificationFormProps) {
   const [form, setForm] = useState<CreateFormValues>(
     initialValues ?? defaultValues(),
-  )
-  const [deactivateOpen, setDeactivateOpen] = useState(false)
+  );
+  const [deactivateOpen, setDeactivateOpen] = useState(false);
 
-  const isEdit = Boolean(initialValues)
+  const isEdit = Boolean(initialValues);
 
   useEffect(() => {
-    if (initialValues) setForm(initialValues)
-  }, [initialValues])
+    if (initialValues) setForm(initialValues);
+  }, [initialValues]);
 
-  const result = createFormSchema.safeParse(form)
-  const isValid = result.success
+  const result = createFormSchema.safeParse(form);
+  const isValid = result.success;
 
-  const set = <K extends keyof CreateFormValues>(key: K, value: CreateFormValues[K]) =>
-    setForm((prev) => ({ ...prev, [key]: value }))
+  const set = <K extends keyof CreateFormValues>(
+    key: K,
+    value: CreateFormValues[K],
+  ) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const setConfig = (
-    updater: (config: CreateFormValues['config']) => CreateFormValues['config'],
-  ) => setForm((prev) => ({ ...prev, config: updater(prev.config) }))
+    updater: (config: CreateFormValues["config"]) => CreateFormValues["config"],
+  ) => setForm((prev) => ({ ...prev, config: updater(prev.config) }));
 
   function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!result.success) return
-    onSubmit(result.data)
+    e.preventDefault();
+    if (!result.success) return;
+    onSubmit(result.data);
   }
 
   function handleIsActiveChange(checked: boolean) {
     if (form.isActive && !checked) {
-      setDeactivateOpen(true)
-      return
+      setDeactivateOpen(true);
+      return;
     }
-    set('isActive', checked)
+    set("isActive", checked);
   }
 
   function confirmDeactivate() {
-    set('isActive', false)
-    setDeactivateOpen(false)
+    set("isActive", false);
+    setDeactivateOpen(false);
   }
 
   return (
@@ -111,7 +113,7 @@ export function CertificationForm({
               <Select
                 value={form.provider}
                 onValueChange={(value) =>
-                  set('provider', value as CreateFormValues['provider'])
+                  set("provider", value as CreateFormValues["provider"])
                 }
               >
                 <SelectTrigger>
@@ -133,7 +135,7 @@ export function CertificationForm({
                 id="code"
                 value={form.code}
                 placeholder="e.g. CLF-C02"
-                onChange={(e) => set('code', e.target.value)}
+                onChange={(e) => set("code", e.target.value)}
               />
             </Field>
           </>
@@ -146,7 +148,7 @@ export function CertificationForm({
           id="name"
           value={form.name}
           placeholder="e.g. AWS Certified Cloud Practitioner"
-          onChange={(e) => set('name', e.target.value)}
+          onChange={(e) => set("name", e.target.value)}
         />
       </Field>
 
@@ -156,7 +158,7 @@ export function CertificationForm({
           id="description"
           value={form.description}
           placeholder="Short description"
-          onChange={(e) => set('description', e.target.value)}
+          onChange={(e) => set("description", e.target.value)}
         />
       </Field>
 
@@ -173,7 +175,7 @@ export function CertificationForm({
         </div>
       </Field>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="flex max-w-md flex-col gap-4">
         <Field>
           <FieldLabel htmlFor="questionCount">Question count</FieldLabel>
           <NumberInput
@@ -187,20 +189,20 @@ export function CertificationForm({
           />
           {result.success === false &&
             result.error.issues.some((i) =>
-              i.path.join('.').startsWith('config.questionCount'),
+              i.path.join(".").startsWith("config.questionCount"),
             ) && (
               <FieldError
                 errors={[
-                  { message: 'Question count must be between 1 and 100' },
+                  { message: "Question count must be between 1 and 100" },
                 ]}
               />
             )}
         </Field>
 
-        <Field className="sm:col-span-2">
+        <Field>
           <FieldLabel>Difficulty distribution (%)</FieldLabel>
           <div className="flex flex-1 items-end gap-3">
-            {(['easy', 'medium', 'hard'] as const).map((level) => (
+            {(["easy", "medium", "hard"] as const).map((level) => (
               <Label key={level} className="flex flex-1 flex-col gap-1">
                 <span className="text-xs text-muted-foreground capitalize">
                   {level}
@@ -293,11 +295,11 @@ export function CertificationForm({
         <Button type="submit" disabled={!isValid || isSubmitting}>
           {isSubmitting
             ? isEdit
-              ? 'Saving…'
-              : 'Creating…'
+              ? "Saving…"
+              : "Creating…"
             : isEdit
-              ? 'Save changes'
-              : 'Create certification'}
+              ? "Save changes"
+              : "Create certification"}
         </Button>
       </div>
 
@@ -318,12 +320,16 @@ export function CertificationForm({
             >
               Cancel
             </Button>
-            <Button type="button" variant="destructive" onClick={confirmDeactivate}>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={confirmDeactivate}
+            >
               Deactivate
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </form>
-  )
+  );
 }
