@@ -3,6 +3,7 @@ import { ApiKeyGate } from "@/components/ApiKeyGate";
 import { useAuth } from "@/lib/auth";
 import { UiShell } from "@/components/UiShell";
 import { CatalogPage } from "@/pages/Catalog/CatalogPage";
+import { GeneratePage } from "@/pages/Generate/GeneratePage";
 import { ManagementListPage } from "@/pages/ManageCertification/ManagementListPage";
 import { NewCertificationPage } from "@/pages/NewCertification/NewCertificationPage";
 import { EditCertificationPage } from "@/pages/EditCertification/EditCertificationPage";
@@ -16,6 +17,7 @@ function AuthenticatedApp() {
     <Routes>
       <Route element={<UiShell />}>
         <Route index element={<CatalogPage />} />
+        <Route path="/certifications/:id" element={<GeneratePage />} />
         <Route path="/exams/:id/status" element={<ExamStatusPage />} />
         <Route path="/exams/:id" element={<QuizPage />} />
         <Route path="/exams/:id/results" element={<ReviewPage />} />
