@@ -24,6 +24,18 @@ _Avoid_: Admin, admin panel.
 A generated, immutable practice exam belonging to a single certification.
 _Avoid_: Test, quiz, assessment.
 
+**ExamPlan**:
+The blueprinted composition of an Exam before generation — question count, difficulty split, and domain/topic breakdown. Derived from a Certification's config and shown on the Generate page as weights plus approximate question counts, since the actual breakdown is decided during generation.
+_Avoid_: Blueprint, composition, config.
+
+**Generate** (the page):
+The certification detail and confirmation screen (route `/certifications/:id`) reached by tapping a Certification in the Catalog. It shows the Certification's ExamPlan and a CTA to confirm exam generation. Confirm is blocked if the certification is inactive.
+_Avoid_: Generate page, detail page, plan page, exam-generate.
+
+**Readiness notification**:
+An out-of-band notification that tells the user an Exam is READY. Not yet implemented by the backend (on the roadmap); the Generate-confirm status fallback screen never polls or refreshes status.
+_Avoid_: Notification (unqualified), alert, push.
+
 **ExamStatus**:
 The lifecycle state of an exam: `GENERATING`, `READY`, or `FAILED`.
 _Avoid_: Status (unqualified), state.
