@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useDeleteExam, useExamDownload, useExams } from '@/hooks/use-exams'
 import { NetworkErrorBlock } from '@/components/NetworkErrorBlock'
@@ -34,6 +35,7 @@ const ALL = 'ALL'
 const PROVIDER_OPTIONS: Array<Provider> = ['aws', 'azure', 'gcp']
 
 export function HistoryPage() {
+  const navigate = useNavigate()
   const [status, setStatus] = useState<string>('READY')
   const [provider, setProvider] = useState<Provider | typeof ALL>(ALL)
   const [pendingDelete, setPendingDelete] = useState<ExamListItem | null>(null)
@@ -151,7 +153,26 @@ export function HistoryPage() {
                   {new Date(exam.createdAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {exam.status === 'READY' && (
+                      <Button
+                        size="sm"
+                        onClick={() => navigate(`/exams/${exam.id}`)}
+                      >
+                        Start exam
+                      </Button>
+                    )}
+                    {exam.status === 'FAILED' && (
+                      <p className="max-w-[200px] text-right text-xs text-destructive">
+                        Generation failed.{' '}
+                        <Link
+                          to="/"
+                          className="font-medium text-primary hover:underline"
+                        >
+                          Generate a new exam
+                        </Link>
+                      </p>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
