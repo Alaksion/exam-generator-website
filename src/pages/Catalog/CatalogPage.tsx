@@ -1,42 +1,21 @@
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+import { Link } from 'react-router-dom'
 import { useCertifications } from '@/hooks/use-certifications'
-import { useCreateExam } from '@/hooks/use-exams'
 import { NetworkErrorBlock } from '@/components/NetworkErrorBlock'
-import { Button } from '@/components/ui/button'
 
 export function CatalogPage() {
-  const navigate = useNavigate()
   const { data, error, isPending, refetch } = useCertifications()
-  const createExam = useCreateExam()
 
   const active = (data?.items ?? []).filter((cert) => cert.isActive)
-  const handleGenerate = (certificationId: string) => {
-    createExam.mutate(certificationId, {
-      onSuccess: (exam) => {
-        toast.success('Preparing your exam')
-        navigate(`/exams/${exam.id}/status`, {
-          state: { certificationId },
-        })
-      },
-    })
-  }
 
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-medium">Catalog</h1>
         <p className="text-sm text-muted-foreground">
-          Generate a new practice exam from an active certification.
+          Choose a certification to view its exam plan and generate a practice
+          exam.
         </p>
       </div>
-
-      {createExam.error && (
-        <NetworkErrorBlock
-          error={createExam.error}
-          onRetry={() => createExam.reset()}
-        />
-      )}
 
       {isPending ? (
         <p className="py-12 text-center text-sm text-muted-foreground">
@@ -53,9 +32,10 @@ export function CatalogPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {active.map((cert) => (
-            <div
+            <Link
               key={cert.id}
-              className="flex flex-col justify-between rounded-lg border p-5"
+              to={`/certifications/${cert.id}`}
+              className="group flex flex-col justify-between rounded-lg border p-5 transition-colors hover:border-primary/40"
             >
               <div>
                 <div className="mb-1 flex items-center gap-2">
@@ -74,14 +54,10 @@ export function CatalogPage() {
                   {cert.config.questionCount} questions
                 </p>
               </div>
-              <Button
-                className="mt-4"
-                onClick={() => handleGenerate(cert.id)}
-                disabled={createExam.isPending}
-              >
-                {createExam.isPending ? 'Preparing…' : 'Generate exam'}
-              </Button>
-            </div>
+              <span className="mt-4 text-sm font-medium text-primary group-hover:underline">
+                View exam plan →
+              </span>
+            </Link>
           ))}
         </div>
       )}
