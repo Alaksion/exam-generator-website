@@ -92,7 +92,14 @@ Each domain in `config.domains`:
 | --- | --- | --- | --- |
 | `name` | `string` | yes | Domain name. |
 | `weight` | `integer` | yes | Integer percentage weight (`>= 1`). All domain weights sum to `100`. |
-| `topics` | `string[]` | yes | Topic names. IDs are system-generated on create/update. |
+| `topics` | `object[]` | yes | Topic objects, each `{ name, context }`. IDs are system-generated on create/update. |
+
+Each topic in a domain:
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | `string` | yes | Non-empty topic name. |
+| `context` | `string` | yes | Free-form prose describing what the topic covers. Trimmed (leading/trailing whitespace stripped), then required to be **20–1500 characters**. A missing, whitespace-only, under-20, or over-1500 `context` is rejected with `400 InvalidRequest`. |
 
 **Example request**
 
@@ -110,12 +117,34 @@ Each domain in `config.domains`:
       {
         "name": "Cloud Concepts",
         "weight": 40,
-        "topics": ["Cloud Value Proposition", "AWS Global Infrastructure"]
+        "topics": [
+          {
+            "name": "Cloud Value Proposition",
+            "context": "The core benefits of cloud computing: pay-as-you-go pricing, elasticity, and the ability to scale compute up and down on demand."
+          },
+          {
+            "name": "AWS Global Infrastructure",
+            "context": "AWS regions, Availability Zones, edge locations, and how the global network delivers low-latency, highly available services."
+          }
+        ]
       },
       {
         "name": "Technology",
         "weight": 30,
-        "topics": ["Compute", "Storage", "Networking"]
+        "topics": [
+          {
+            "name": "Compute",
+            "context": "Amazon EC2 instance families and purchasing options, plus the boundaries between compute, storage, and networking services."
+          },
+          {
+            "name": "Storage",
+            "context": "Object, block, and file storage services including Amazon S3, EBS, EFS, and when it is appropriate to choose each one."
+          },
+          {
+            "name": "Networking",
+            "context": "Amazon VPC fundamentals, subnets, route tables, security groups, and connecting on-premises networks to AWS."
+          }
+        ]
       }
     ]
   }
@@ -141,8 +170,16 @@ Each domain in `config.domains`:
         "name": "Cloud Concepts",
         "weight": 40,
         "topics": [
-          { "id": "55555555-5555-5555-5555-555555555555", "name": "Cloud Value Proposition" },
-          { "id": "66666666-6666-6666-6666-666666666666", "name": "AWS Global Infrastructure" }
+          {
+            "id": "55555555-5555-5555-5555-555555555555",
+            "name": "Cloud Value Proposition",
+            "context": "The core benefits of cloud computing: pay-as-you-go pricing, elasticity, and the ability to scale compute up and down on demand."
+          },
+          {
+            "id": "66666666-6666-6666-6666-666666666666",
+            "name": "AWS Global Infrastructure",
+            "context": "AWS regions, Availability Zones, edge locations, and how the global network delivers low-latency, highly available services."
+          }
         ]
       }
     ]
@@ -150,7 +187,7 @@ Each domain in `config.domains`:
 }
 ```
 
-**Errors**: `400 InvalidRequest` (missing fields, or `difficultyDistribution`/domain weights that don't sum to their required totals), `409 Conflict` (duplicate `provider` + `code`).
+**Errors**: `400 InvalidRequest` (missing fields, invalid `config` values, missing/out-of-range topic `context`), `409 Conflict` (duplicate `provider` + `code`).
 
 ---
 
@@ -181,7 +218,11 @@ Returns the certification catalog. Each item's `isActive` flag indicates whether
             "name": "Cloud Concepts",
             "weight": 40,
             "topics": [
-              { "id": "55555555-5555-5555-5555-555555555555", "name": "Cloud Value Proposition" }
+              {
+                "id": "55555555-5555-5555-5555-555555555555",
+                "name": "Cloud Value Proposition",
+                "context": "The core benefits of cloud computing: pay-as-you-go pricing, elasticity, and the ability to scale compute up and down on demand."
+              }
             ]
           }
         ]
@@ -190,6 +231,8 @@ Returns the certification catalog. Each item's `isActive` flag indicates whether
   ]
 }
 ```
+
+List and detail responses always carry each topic's `context`, so a `GET` → `PUT` edit round trip can resubmit topics as-is.
 
 ---
 
@@ -211,7 +254,7 @@ Same shape as a single certification item from the list response.
 
 #### `PUT /v1/certifications/{id}`
 
-Updates mutable fields (`name`, `description`, `isActive`, `config`). `provider` and `code` are immutable and may not be present in the body. Topic IDs are regenerated as needed on update.
+Updates mutable fields (`name`, `description`, `isActive`, `config`). `provider` and `code` are immutable and may not be present in the body. The update replaces the whole `config` — the client sends the full config, and any omitted domain/topic is dropped. Domain and topic `id`s are server-managed; on update the backend relinks them by **name** (a matching name preserves the stored id, a new name gets a fresh id, a renamed topic is treated as delete + add).
 
 **Request body**
 
@@ -231,12 +274,34 @@ Same shape as the create request's config-driven fields, but without `provider` 
       {
         "name": "Cloud Concepts",
         "weight": 40,
-        "topics": ["Cloud Value Proposition", "AWS Global Infrastructure"]
+        "topics": [
+          {
+            "name": "Cloud Value Proposition",
+            "context": "The core benefits of cloud computing: pay-as-you-go pricing, elasticity, and the ability to scale compute up and down on demand."
+          },
+          {
+            "name": "AWS Global Infrastructure",
+            "context": "AWS regions, Availability Zones, edge locations, and how the global network delivers low-latency, highly available services."
+          }
+        ]
       },
       {
         "name": "Technology",
         "weight": 30,
-        "topics": ["Compute", "Storage", "Networking"]
+        "topics": [
+          {
+            "name": "Compute",
+            "context": "Amazon EC2 instance families and purchasing options, plus the boundaries between compute, storage, and networking services."
+          },
+          {
+            "name": "Storage",
+            "context": "Object, block, and file storage services including Amazon S3, EBS, EFS, and when it is appropriate to choose each one."
+          },
+          {
+            "name": "Networking",
+            "context": "Amazon VPC fundamentals, subnets, route tables, security groups, and connecting on-premises networks to AWS."
+          }
+        ]
       }
     ]
   }
@@ -247,7 +312,7 @@ Same shape as the create request's config-driven fields, but without `provider` 
 
 Same certification shape as `POST /v1/certifications`.
 
-**Errors**: `400 InvalidRequest` (missing fields or immutable fields present), `404 NotFound`.
+**Errors**: `400 InvalidRequest` (missing fields, immutable fields present, or invalid topic `context`), `404 NotFound`.
 
 ---
 
