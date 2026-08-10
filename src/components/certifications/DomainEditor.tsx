@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,10 +29,40 @@ export function DomainEditor({
   onUpdate,
   onRemove,
 }: DomainEditorProps) {
+  const [touched, setTouched] = useState<boolean[]>(() =>
+    domain.topics.map(() => false),
+  )
+
+  useEffect(() => {
+    setTouched((prev) => {
+      if (prev.length === domain.topics.length) return prev
+      return Array.from({ length: domain.topics.length }, (_, i) => prev[i] ?? false)
+    })
+  }, [domain.topics.length])
+
   function updateTopic(topicIndex: number, value: Topic) {
+    if (value.context !== domain.topics[topicIndex].context) {
+      setTouched((prev) => prev.map((t, i) => (i === topicIndex ? true : t)))
+    }
     onUpdate({
       ...domain,
       topics: domain.topics.map((t, i) => (i === topicIndex ? value : t)),
+    })
+  }
+
+  function removeTopic(topicIndex: number) {
+    setTouched((prev) => prev.filter((_, i) => i !== topicIndex))
+    onUpdate({
+      ...domain,
+      topics: domain.topics.filter((_, i) => i !== topicIndex),
+    })
+  }
+
+  function addTopic() {
+    setTouched((prev) => [...prev, false])
+    onUpdate({
+      ...domain,
+      topics: [...domain.topics, { name: '', context: '' }],
     })
   }
 
@@ -82,6 +113,7 @@ export function DomainEditor({
           {domain.topics.map((topic, topicIndex) => {
             const contextLength = topic.context.trim().length
             const contextError = contextErrorFor(topic)
+            const showContextError = touched[topicIndex] ? contextError : null
             return (
               <div
                 key={topicIndex}
@@ -104,14 +136,7 @@ export function DomainEditor({
                     variant="ghost"
                     className="shrink-0"
                     disabled={domain.topics.length <= 1}
-                    onClick={() =>
-                      onUpdate({
-                        ...domain,
-                        topics: domain.topics.filter(
-                          (_, i) => i !== topicIndex,
-                        ),
-                      })
-                    }
+                    onClick={() => removeTopic(topicIndex)}
                   >
                     Remove
                   </Button>
@@ -121,7 +146,7 @@ export function DomainEditor({
                     aria-label={`Topic ${topicIndex + 1} context`}
                     placeholder="Describe what this topic covers (20–1500 characters)"
                     value={topic.context}
-                    aria-invalid={Boolean(contextError)}
+                    aria-invalid={Boolean(showContextError)}
                     onChange={(e) =>
                       updateTopic(topicIndex, {
                         ...topic,
@@ -130,7 +155,7 @@ export function DomainEditor({
                     }
                   />
                   <div className="flex items-center justify-between gap-2">
-                    <FieldError errors={contextError ? [{ message: contextError }] : []} />
+                    <FieldError errors={showContextError ? [{ message: showContextError }] : []} />
                     <span className="ml-auto shrink-0 text-xs text-muted-foreground tabular-nums">
                       {contextLength}/{TOPIC_CONTEXT_MAX_LENGTH}
                     </span>
@@ -144,12 +169,7 @@ export function DomainEditor({
           type="button"
           variant="outline"
           className="mt-2"
-          onClick={() =>
-            onUpdate({
-              ...domain,
-              topics: [...domain.topics, { name: '', context: '' }],
-            })
-          }
+          onClick={addTopic}
         >
           Add topic
         </Button>
