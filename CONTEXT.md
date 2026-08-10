@@ -75,3 +75,11 @@ _Avoid_: Submission, response.
 **Download**:
 A time-limited presigned URL to an exam's PDF.
 _Avoid_: PDF link, file URL.
+
+**Topic**:
+A discrete subject area within a Domain of a Certification's config, e.g. `Amazon S3`. Named and non-empty, but the name alone does not define what the Topic covers — that is the job of its Topic Context.
+_Avoid_: Subject, module, unit.
+
+**Topic Context**:
+The free-form prose (20–1500 characters, trimmed) describing what a Topic actually covers. Required for every Topic on create and update, returned by the Certification API on every response, and used to scope the LLM prompt during Exam generation. Not present on any Exam artifact.
+_Avoid_: description (ambiguous — already the Certification-level field), notes, topic summary.
