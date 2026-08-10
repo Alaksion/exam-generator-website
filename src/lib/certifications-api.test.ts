@@ -28,7 +28,14 @@ const cert = {
         id: 'd1',
         name: 'Cloud Concepts',
         weight: 100,
-        topics: [{ id: 't1', name: 'Cloud Value Proposition' }],
+        topics: [
+          {
+            id: 't1',
+            name: 'Cloud Value Proposition',
+            context:
+              'Covers the core value proposition of cloud computing, including cost efficiency and scalability.',
+          },
+        ],
       },
     ],
   },
@@ -42,7 +49,17 @@ const update: CertificationUpdate = {
     questionCount: 20,
     difficultyDistribution: { easy: 50, medium: 30, hard: 20 },
     domains: [
-      { name: 'Security', weight: 100, topics: ['Shared Responsibility'] },
+      {
+        name: 'Security',
+        weight: 100,
+        topics: [
+          {
+            name: 'Shared Responsibility',
+            context:
+              'Explains the shared responsibility model between the cloud provider and the customer.',
+          },
+        ],
+      },
     ],
   },
 }

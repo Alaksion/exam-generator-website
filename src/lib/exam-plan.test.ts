@@ -12,15 +12,32 @@ function exampleConfig(): CertificationConfig {
         name: 'Cloud Concepts',
         weight: 40,
         topics: [
-          { id: 't1', name: 'Cloud Value Proposition' },
-          { id: 't2', name: 'AWS Global Infrastructure' },
+          {
+            id: 't1',
+            name: 'Cloud Value Proposition',
+            context:
+              'Covers the core value proposition of cloud computing, including cost efficiency and scalability.',
+          },
+          {
+            id: 't2',
+            name: 'AWS Global Infrastructure',
+            context:
+              'Describes AWS regions, availability zones, and the global content delivery network.',
+          },
         ],
       },
       {
         id: 'd2',
         name: 'Technology',
         weight: 20,
-        topics: [{ id: 't3', name: 'Compute' }],
+        topics: [
+          {
+            id: 't3',
+            name: 'Compute',
+            context:
+              'Covers EC2 instance types, pricing models, and related compute services.',
+          },
+        ],
       },
     ],
   }

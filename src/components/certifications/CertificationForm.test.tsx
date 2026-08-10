@@ -3,6 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { CertificationForm } from '@/components/certifications/CertificationForm'
 import type { CreateFormValues } from '@/lib/certification-schema'
 
+const VALID_CONTEXT =
+  'Covers the core value proposition of cloud computing, including cost efficiency, elasticity, and on-demand access to resources.'
+
 const baseValues: CreateFormValues = {
   provider: 'aws',
   code: 'CLF-C02',
@@ -13,7 +16,11 @@ const baseValues: CreateFormValues = {
     questionCount: 10,
     difficultyDistribution: { easy: 40, medium: 40, hard: 20 },
     domains: [
-      { name: 'Cloud Concepts', weight: 100, topics: ['Cloud Value Proposition'] },
+      {
+        name: 'Cloud Concepts',
+        weight: 100,
+        topics: [{ name: 'Cloud Value Proposition', context: VALID_CONTEXT }],
+      },
     ],
   },
 }
@@ -64,6 +71,66 @@ describe('CertificationForm', () => {
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining(baseValues))
+  })
+
+  it('shows a trimmed character counter for each topic context', () => {
+    const padded = `  ${VALID_CONTEXT}  `
+    render(
+      <CertificationForm
+        initialValues={{
+          ...baseValues,
+          config: {
+            ...baseValues.config,
+            domains: [
+              {
+                name: 'Cloud Concepts',
+                weight: 100,
+                topics: [{ name: 'Cloud Value Proposition', context: padded }],
+              },
+            ],
+          },
+        }}
+        onSubmit={() => undefined}
+      />,
+    )
+
+    expect(
+      screen.getByText(`${VALID_CONTEXT.length}/1500`),
+    ).toBeInTheDocument()
+  })
+
+  it('flags an out-of-range topic context and blocks submission', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn()
+
+    render(
+      <CertificationForm
+        initialValues={{
+          ...baseValues,
+          config: {
+            ...baseValues.config,
+            domains: [
+              {
+                name: 'Cloud Concepts',
+                weight: 100,
+                topics: [{ name: 'Cloud Value Proposition', context: 'Short' }],
+              },
+            ],
+          },
+        }}
+        onSubmit={onSubmit}
+      />,
+    )
+
+    expect(
+      screen.getByText('Topic context must be at least 20 characters'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Save changes' }),
+    ).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    expect(onSubmit).not.toHaveBeenCalled()
   })
 
   describe('deactivation confirmation', () => {
