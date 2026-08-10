@@ -7,6 +7,9 @@ export default defineConfig({
   resolve: {
     alias: { '@': '/src' },
   },
+  define: {
+    'import.meta.env.VITE_API_BASE': JSON.stringify(''),
+  },
   test: {
     globals: true,
     environment: 'jsdom',

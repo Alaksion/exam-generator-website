@@ -20,7 +20,10 @@ function toFormValues(cert: Certification): CreateFormValues {
       domains: cert.config.domains.map((domain) => ({
         name: domain.name,
         weight: domain.weight,
-        topics: domain.topics.map((topic) => topic.name),
+        topics: domain.topics.map((topic) => ({
+          name: topic.name,
+          context: topic.context,
+        })),
       })),
     },
   }

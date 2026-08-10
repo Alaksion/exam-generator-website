@@ -40,7 +40,7 @@ export interface CertificationFormProps {
 const emptyDomain = () => ({
   name: "",
   weight: 100,
-  topics: [""],
+  topics: [{ name: "", context: "" }],
 });
 
 const defaultValues = (): CreateFormValues => ({
