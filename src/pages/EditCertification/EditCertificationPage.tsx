@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { toastOn400 } from '@/lib/error-toast'
 import { CertificationForm } from '@/components/certifications/CertificationForm'
 import { NetworkErrorBlock } from '@/components/NetworkErrorBlock'
 import { useCertification, useUpdateCertification } from '@/hooks/use-certifications'
@@ -49,6 +50,7 @@ export function EditCertificationPage() {
           toast.success('Certification updated')
           navigate('/manage/certifications')
         },
+        onError: toastOn400,
       },
     )
   }

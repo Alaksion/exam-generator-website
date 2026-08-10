@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { toastOn400 } from '@/lib/error-toast'
 import { CertificationForm } from '@/components/certifications/CertificationForm'
 import { useCreateCertification } from '@/hooks/use-certifications'
 import type { CreateFormValues } from '@/lib/certification-schema'
@@ -14,6 +15,7 @@ export function NewCertificationPage() {
         toast.success('Certification created')
         navigate('/manage/certifications')
       },
+      onError: toastOn400,
     })
   }
 
