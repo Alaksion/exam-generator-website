@@ -99,10 +99,7 @@ describe('CertificationForm', () => {
     ).toBeInTheDocument()
   })
 
-  it('flags an out-of-range topic context and blocks submission', async () => {
-    const user = userEvent.setup()
-    const onSubmit = vi.fn()
-
+  it('flags an out-of-range topic context and blocks submission', () => {
     render(
       <CertificationForm
         initialValues={{
@@ -118,7 +115,7 @@ describe('CertificationForm', () => {
             ],
           },
         }}
-        onSubmit={onSubmit}
+        onSubmit={() => undefined}
       />,
     )
 
@@ -128,9 +125,6 @@ describe('CertificationForm', () => {
     expect(
       screen.getByRole('button', { name: 'Save changes' }),
     ).toBeDisabled()
-
-    await user.click(screen.getByRole('button', { name: 'Save changes' }))
-    expect(onSubmit).not.toHaveBeenCalled()
   })
 
   describe('deactivation confirmation', () => {

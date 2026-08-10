@@ -22,13 +22,22 @@ export const difficultyDistributionSchema = z.object({
   hard: z.coerce.number().int().min(0),
 })
 
+export const TOPIC_CONTEXT_MIN_LENGTH = 20
+export const TOPIC_CONTEXT_MAX_LENGTH = 1500
+
+export const topicContextMinMessage = (): string =>
+  `Topic context must be at least ${TOPIC_CONTEXT_MIN_LENGTH} characters`
+
+export const topicContextMaxMessage = (): string =>
+  `Topic context must be at most ${TOPIC_CONTEXT_MAX_LENGTH} characters`
+
 export const topicSchema = z.object({
   name: z.string().min(1, 'Topic name is required'),
   context: z
     .string()
     .trim()
-    .min(20, 'Topic context must be at least 20 characters')
-    .max(1500, 'Topic context must be at most 1500 characters'),
+    .min(TOPIC_CONTEXT_MIN_LENGTH, topicContextMinMessage())
+    .max(TOPIC_CONTEXT_MAX_LENGTH, topicContextMaxMessage()),
 })
 
 export const domainSchema = z.object({

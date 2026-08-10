@@ -4,13 +4,16 @@ import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
 import { Textarea } from '@/components/ui/textarea'
 import { FieldError } from '@/components/ui/field'
-import type { CreateFormValues } from '@/lib/certification-schema'
+import {
+  TOPIC_CONTEXT_MAX_LENGTH,
+  TOPIC_CONTEXT_MIN_LENGTH,
+  topicContextMaxMessage,
+  topicContextMinMessage,
+  type CreateFormValues,
+} from '@/lib/certification-schema'
 
 type Domain = CreateFormValues['config']['domains'][number]
 type Topic = Domain['topics'][number]
-
-const MIN_CONTEXT_LENGTH = 20
-const MAX_CONTEXT_LENGTH = 1500
 
 interface DomainEditorProps {
   domainIndex: number
@@ -34,13 +37,8 @@ export function DomainEditor({
 
   function contextErrorFor(topic: Topic): string | null {
     const length = topic.context.trim().length
-    if (length === 0) return null
-    if (length < MIN_CONTEXT_LENGTH) {
-      return `Topic context must be at least ${MIN_CONTEXT_LENGTH} characters`
-    }
-    if (length > MAX_CONTEXT_LENGTH) {
-      return `Topic context must be at most ${MAX_CONTEXT_LENGTH} characters`
-    }
+    if (length < TOPIC_CONTEXT_MIN_LENGTH) return topicContextMinMessage()
+    if (length > TOPIC_CONTEXT_MAX_LENGTH) return topicContextMaxMessage()
     return null
   }
 
@@ -84,8 +82,6 @@ export function DomainEditor({
           {domain.topics.map((topic, topicIndex) => {
             const contextLength = topic.context.trim().length
             const contextError = contextErrorFor(topic)
-            const contextInvalid =
-              Boolean(contextError) || contextLength > MAX_CONTEXT_LENGTH
             return (
               <div
                 key={topicIndex}
@@ -125,7 +121,7 @@ export function DomainEditor({
                     aria-label={`Topic ${topicIndex + 1} context`}
                     placeholder="Describe what this topic covers (20–1500 characters)"
                     value={topic.context}
-                    aria-invalid={contextInvalid}
+                    aria-invalid={Boolean(contextError)}
                     onChange={(e) =>
                       updateTopic(topicIndex, {
                         ...topic,
@@ -136,7 +132,7 @@ export function DomainEditor({
                   <div className="flex items-center justify-between gap-2">
                     <FieldError errors={contextError ? [{ message: contextError }] : []} />
                     <span className="ml-auto shrink-0 text-xs text-muted-foreground tabular-nums">
-                      {contextLength}/{MAX_CONTEXT_LENGTH}
+                      {contextLength}/{TOPIC_CONTEXT_MAX_LENGTH}
                     </span>
                   </div>
                 </div>
