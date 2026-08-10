@@ -22,12 +22,19 @@ export const difficultyDistributionSchema = z.object({
   hard: z.coerce.number().int().min(0),
 })
 
+export const topicSchema = z.object({
+  name: z.string().min(1, 'Topic name is required'),
+  context: z
+    .string()
+    .trim()
+    .min(20, 'Topic context must be at least 20 characters')
+    .max(1500, 'Topic context must be at most 1500 characters'),
+})
+
 export const domainSchema = z.object({
   name: z.string().min(1, 'Domain name is required'),
   weight: z.coerce.number().int().min(1, 'Weight must be at least 1'),
-  topics: z
-    .array(z.string().min(1, 'Topic name is required'))
-    .min(1, 'Add at least one topic'),
+  topics: z.array(topicSchema).min(1, 'Add at least one topic'),
 })
 
 export const configSchema = z

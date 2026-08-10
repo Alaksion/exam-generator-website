@@ -73,6 +73,7 @@ export interface Attempt {
 export interface Topic {
   id: string
   name: string
+  context: string
 }
 
 export interface KnowledgeDomain {
@@ -98,10 +99,15 @@ export interface Certification {
   config: CertificationConfig
 }
 
+export interface TopicInput {
+  name: string
+  context: string
+}
+
 export interface DomainInput {
   name: string
   weight: number
-  topics: string[]
+  topics: TopicInput[]
 }
 
 export interface CertificationConfigInput {
