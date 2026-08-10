@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,40 +29,22 @@ export function DomainEditor({
   onUpdate,
   onRemove,
 }: DomainEditorProps) {
-  const [touched, setTouched] = useState<boolean[]>(() =>
-    domain.topics.map(() => false),
+  const [touched, setTouched] = useState<(string | null)[]>(() =>
+    domain.topics.map(() => null),
   )
-
-  useEffect(() => {
-    setTouched((prev) => {
-      if (prev.length === domain.topics.length) return prev
-      return Array.from({ length: domain.topics.length }, (_, i) => prev[i] ?? false)
-    })
-  }, [domain.topics.length])
 
   function updateTopic(topicIndex: number, value: Topic) {
     if (value.context !== domain.topics[topicIndex].context) {
-      setTouched((prev) => prev.map((t, i) => (i === topicIndex ? true : t)))
+      setTouched((prev) =>
+        Array.from(
+          { length: Math.max(prev.length, topicIndex + 1) },
+          (_, i) => (i === topicIndex ? value.context : (prev[i] ?? null)),
+        ),
+      )
     }
     onUpdate({
       ...domain,
       topics: domain.topics.map((t, i) => (i === topicIndex ? value : t)),
-    })
-  }
-
-  function removeTopic(topicIndex: number) {
-    setTouched((prev) => prev.filter((_, i) => i !== topicIndex))
-    onUpdate({
-      ...domain,
-      topics: domain.topics.filter((_, i) => i !== topicIndex),
-    })
-  }
-
-  function addTopic() {
-    setTouched((prev) => [...prev, false])
-    onUpdate({
-      ...domain,
-      topics: [...domain.topics, { name: '', context: '' }],
     })
   }
 
@@ -113,7 +95,10 @@ export function DomainEditor({
           {domain.topics.map((topic, topicIndex) => {
             const contextLength = topic.context.trim().length
             const contextError = contextErrorFor(topic)
-            const showContextError = touched[topicIndex] ? contextError : null
+            const isTouched =
+              touched[topicIndex] != null &&
+              touched[topicIndex] === topic.context
+            const showContextError = isTouched ? contextError : null
             return (
               <div
                 key={topicIndex}
@@ -136,7 +121,14 @@ export function DomainEditor({
                     variant="ghost"
                     className="shrink-0"
                     disabled={domain.topics.length <= 1}
-                    onClick={() => removeTopic(topicIndex)}
+                    onClick={() =>
+                      onUpdate({
+                        ...domain,
+                        topics: domain.topics.filter(
+                          (_, i) => i !== topicIndex,
+                        ),
+                      })
+                    }
                   >
                     Remove
                   </Button>
@@ -169,7 +161,12 @@ export function DomainEditor({
           type="button"
           variant="outline"
           className="mt-2"
-          onClick={addTopic}
+          onClick={() =>
+            onUpdate({
+              ...domain,
+              topics: [...domain.topics, { name: '', context: '' }],
+            })
+          }
         >
           Add topic
         </Button>
