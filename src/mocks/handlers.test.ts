@@ -78,10 +78,8 @@ describe('certifications mock - topic context contract', () => {
       validCreate(['Amazon S3'] as unknown as Array<{ name: string; context: string }>),
     )
     expect(res.status).toBe(400)
-    const body = await parse(res)
-    expect((body as { message: string }).message).toContain(
-      'config.domains.0.topics.0',
-    )
+    const { message } = await parse<{ message: string }>(res)
+    expect(message).toContain('config.domains.0.topics.0: Expected string, received object')
   })
 
   it('rejects a missing context with Required', async () => {

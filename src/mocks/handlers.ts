@@ -90,16 +90,21 @@ const uuid = () => crypto.randomUUID()
 const providers: Provider[] = ['aws', 'azure', 'gcp']
 const difficulties: Difficulty[] = ['easy', 'medium', 'hard']
 
+function buildTopics(topics: TopicInput[], existing: Topic[] = []): Topic[] {
+  return topics.map((topic) => {
+    const match = existing.find((et) => et.name === topic.name)
+    return match
+      ? { ...match, name: topic.name, context: topic.context }
+      : { id: uuid(), name: topic.name, context: topic.context }
+  })
+}
+
 function buildCertification(input: CertificationInput): Certification {
   const domains: KnowledgeDomain[] = input.config.domains.map((d) => ({
     id: uuid(),
     name: d.name,
     weight: d.weight,
-    topics: d.topics.map((topic) => ({
-      id: uuid(),
-      name: topic.name,
-      context: topic.context,
-    })),
+    topics: buildTopics(d.topics),
   }))
 
   return {
@@ -239,7 +244,7 @@ function validateCertificationInput(
       const path = (field?: string) =>
         ['config', 'domains', String(domainIndex), 'topics', String(topicIndex), ...(field ? [field] : [])].join('.')
       if (typeof topic !== 'object' || topic === null || Array.isArray(topic)) {
-        topicIssues.push(`${path()}: Expected object, received string`)
+        topicIssues.push(`${path()}: Expected string, received object`)
         return
       }
       const name = (topic as TopicInput).name
@@ -366,17 +371,11 @@ export const handlers = [
     const config = input.config
     const domains: KnowledgeDomain[] = config.domains.map((d) => {
       const existingDomain = cert.config.domains.find((ed) => ed.name === d.name)
-      const topics: Topic[] = d.topics.map((t) => {
-        const existingTopic = existingDomain?.topics.find((et) => et.name === t.name)
-        return existingTopic
-          ? { id: existingTopic.id, name: t.name, context: t.context }
-          : { id: uuid(), name: t.name, context: t.context }
-      })
       return {
         id: existingDomain ? existingDomain.id : uuid(),
         name: d.name,
         weight: d.weight,
-        topics,
+        topics: buildTopics(d.topics, existingDomain?.topics),
       }
     })
     cert.name = input.name
