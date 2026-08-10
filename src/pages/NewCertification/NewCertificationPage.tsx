@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { ApiRequestError } from '@/lib/api'
+import { toastOn400 } from '@/lib/error-toast'
 import { CertificationForm } from '@/components/certifications/CertificationForm'
 import { useCreateCertification } from '@/hooks/use-certifications'
 import type { CreateFormValues } from '@/lib/certification-schema'
@@ -15,11 +15,7 @@ export function NewCertificationPage() {
         toast.success('Certification created')
         navigate('/manage/certifications')
       },
-      onError: (error) => {
-        if (error instanceof ApiRequestError && error.status === 400) {
-          toast.error(error.message)
-        }
-      },
+      onError: toastOn400,
     })
   }
 

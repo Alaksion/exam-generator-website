@@ -8,12 +8,14 @@ import {
 } from '@tanstack/react-query'
 import { AuthProvider } from '@/components/AuthProvider'
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary'
+import { ApiRequestError } from '@/lib/api'
 import { Toaster } from '@/components/ui/sonner'
 import App from './App.tsx'
 import './index.css'
 
 const mutationCache = new MutationCache({
   onError: (error) => {
+    if (error instanceof ApiRequestError && error.status === 400) return
     window.dispatchEvent(new CustomEvent('api:globalerror', { detail: error }))
   },
 })
