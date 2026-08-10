@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { toFormValues } from '@/lib/certification-form-values'
 import type { Certification } from '@/lib/types'
 
-function baseCert(): Certification {
+const VALID_CONTEXT =
+  'Covers the core value proposition of cloud computing, including cost efficiency, elasticity, and on-demand access.'
+
+function certWithTopics(
+  topics: Array<Record<string, unknown>>,
+): Certification {
   return {
     id: 'c1',
     provider: 'aws',
@@ -13,23 +18,9 @@ function baseCert(): Certification {
     config: {
       questionCount: 10,
       difficultyDistribution: { easy: 40, medium: 40, hard: 20 },
-      domains: [
-        {
-          id: 'd1',
-          name: 'Cloud Concepts',
-          weight: 100,
-          topics: [
-            {
-              id: 't1',
-              name: 'Cloud Value Proposition',
-              context:
-                'Covers the core value proposition of cloud computing, including cost efficiency, elasticity, and on-demand access.',
-            },
-          ],
-        },
-      ],
+      domains: [{ id: 'd1', name: 'Cloud Concepts', weight: 100, topics }],
     },
-  }
+  } as unknown as Certification
 }
 
 function contextIn(values: ReturnType<typeof toFormValues>): string {
@@ -38,40 +29,30 @@ function contextIn(values: ReturnType<typeof toFormValues>): string {
 
 describe('toFormValues topic context', () => {
   it('carries an existing topic context through to form values', () => {
-    const cert = baseCert()
-    expect(contextIn(toFormValues(cert))).toBe(
-      cert.config.domains[0].topics[0].context,
-    )
+    const cert = certWithTopics([
+      { id: 't1', name: 'Cloud Value Proposition', context: VALID_CONTEXT },
+    ])
+    expect(contextIn(toFormValues(cert))).toBe(VALID_CONTEXT)
   })
 
   it('defaults a missing topic context to an empty string', () => {
-    const cert = {
-      ...baseCert(),
-      config: {
-        ...baseCert().config,
-        domains: [
-          {
-            ...baseCert().config.domains[0],
-            topics: [{ id: 't1', name: 'Cloud Value Proposition' }],
-          },
-        ],
-      },
-    } as unknown as Certification
+    const cert = certWithTopics([
+      { id: 't1', name: 'Cloud Value Proposition' },
+    ])
     expect(contextIn(toFormValues(cert))).toBe('')
   })
 
   it('defaults a null topic context to an empty string', () => {
-    const cert = baseCert()
-    cert.config.domains[0].topics[0] = {
-      ...cert.config.domains[0].topics[0],
-      context: null as unknown as string,
-    }
+    const cert = certWithTopics([
+      { id: 't1', name: 'Cloud Value Proposition', context: null },
+    ])
     expect(contextIn(toFormValues(cert))).toBe('')
   })
 
   it('keeps an empty topic context as an empty string', () => {
-    const cert = baseCert()
-    cert.config.domains[0].topics[0].context = ''
+    const cert = certWithTopics([
+      { id: 't1', name: 'Cloud Value Proposition', context: '' },
+    ])
     expect(contextIn(toFormValues(cert))).toBe('')
   })
 })
