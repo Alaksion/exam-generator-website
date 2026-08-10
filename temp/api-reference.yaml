@@ -88,10 +88,30 @@ paths:
                 domains:
                   - name: Cloud Concepts
                     weight: 40
-                    topics: [Cloud Value Proposition, AWS Global Infrastructure]
+                    topics:
+                      - name: Cloud Value Proposition
+                        context: >-
+                          The core benefits of cloud computing: pay-as-you-go
+                          pricing, elasticity, and scaling on demand.
+                      - name: AWS Global Infrastructure
+                        context: >-
+                          AWS regions, Availability Zones, and edge locations,
+                          and how they deliver low-latency services.
                   - name: Technology
                     weight: 30
-                    topics: [Compute, Storage, Networking]
+                    topics:
+                      - name: Compute
+                        context: >-
+                          Amazon EC2 instance families and purchasing options
+                          and their trade-offs.
+                      - name: Storage
+                        context: >-
+                          Object, block, and file storage services and when to
+                          choose each.
+                      - name: Networking
+                        context: >-
+                          Amazon VPC fundamentals, subnets, route tables, and
+                          security groups.
       responses:
         '201':
           description: Certification created.
@@ -466,12 +486,19 @@ components:
           minimum: 0
     Topic:
       type: object
-      required: [id, name]
+      required: [id, name, context]
       properties:
         id:
           $ref: '#/components/schemas/Uuid'
         name:
           type: string
+        context:
+          type: string
+          description: |
+            Free-form prose describing what the topic covers. Always returned in
+            responses; trimmed and 20-1500 characters after trimming.
+          minLength: 20
+          maxLength: 1500
     KnowledgeDomain:
       type: object
       required: [id, name, weight, topics]
@@ -568,7 +595,7 @@ components:
         domains:
           type: array
           minItems: 1
-          description: Domain names and weights; topic IDs are system-generated on create/update.
+          description: Domain names and weights; domain and topic IDs are system-generated on create/update.
           items:
             type: object
             required: [name, weight, topics]
@@ -581,8 +608,25 @@ components:
               topics:
                 type: array
                 items:
-                  type: string
-                  description: Topic names.
+                  $ref: '#/components/schemas/TopicInput'
+    TopicInput:
+      type: object
+      description: |
+        A topic submitted on create or update. `context` is required and
+        trimmed; it must be 20-1500 characters after trimming.
+      required: [name, context]
+      properties:
+        name:
+          type: string
+          description: Non-empty topic name.
+        context:
+          type: string
+          description: |
+            Free-form prose describing what the topic covers. Trimmed
+            (leading/trailing whitespace stripped); must be 20-1500 characters
+            after trimming.
+          minLength: 20
+          maxLength: 1500
     ExamStatus:
       type: string
       enum: [GENERATING, READY, FAILED]
