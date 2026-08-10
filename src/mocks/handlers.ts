@@ -7,6 +7,12 @@ type ExamStatus = 'GENERATING' | 'READY' | 'FAILED'
 interface Topic {
   id: string
   name: string
+  context: string
+}
+
+interface TopicInput {
+  name: string
+  context: string
 }
 
 interface KnowledgeDomain {
@@ -41,7 +47,7 @@ interface CertificationInput {
   config: {
     questionCount: number
     difficultyDistribution: Record<Difficulty, number>
-    domains: Array<{ name: string; weight: number; topics: string[] }>
+    domains: Array<{ name: string; weight: number; topics: TopicInput[] }>
   }
 }
 
@@ -89,7 +95,11 @@ function buildCertification(input: CertificationInput): Certification {
     id: uuid(),
     name: d.name,
     weight: d.weight,
-    topics: d.topics.map((name) => ({ id: uuid(), name })),
+    topics: d.topics.map((topic) => ({
+      id: uuid(),
+      name: topic.name,
+      context: topic.context,
+    })),
   }))
 
   return {
@@ -124,8 +134,18 @@ let certifications: Certification[] = [
           name: 'Cloud Concepts',
           weight: 40,
           topics: [
-            { id: 't0000000-0000-0000-0000-000000000001', name: 'Cloud Value Proposition' },
-            { id: 't0000000-0000-0000-0000-000000000002', name: 'AWS Global Infrastructure' },
+            {
+              id: 't0000000-0000-0000-0000-000000000001',
+              name: 'Cloud Value Proposition',
+              context:
+                'The core benefits of cloud computing: pay-as-you-go pricing, elasticity, and the ability to scale compute and storage on demand.',
+            },
+            {
+              id: 't0000000-0000-0000-0000-000000000002',
+              name: 'AWS Global Infrastructure',
+              context:
+                'AWS regions, Availability Zones, edge locations, and how the global network delivers low-latency and highly available services.',
+            },
           ],
         },
         {
@@ -133,8 +153,18 @@ let certifications: Certification[] = [
           name: 'Technology',
           weight: 30,
           topics: [
-            { id: 't0000000-0000-0000-0000-000000000003', name: 'Compute' },
-            { id: 't0000000-0000-0000-0000-000000000004', name: 'Storage' },
+            {
+              id: 't0000000-0000-0000-0000-000000000003',
+              name: 'Compute',
+              context:
+                'Amazon EC2 instance families and purchasing options, plus how compute, storage, and networking services fit together.',
+            },
+            {
+              id: 't0000000-0000-0000-0000-000000000004',
+              name: 'Storage',
+              context:
+                'Object, block, and file storage services including Amazon S3, EBS, and EFS, and when each is the right choice.',
+            },
           ],
         },
       ],
@@ -201,6 +231,38 @@ function validateCertificationInput(
     weightTotal !== 100
   ) {
     return 'domain weights must be integers that sum to 100, each with at least one topic'
+  }
+
+  const topicIssues: string[] = []
+  domains.forEach((domain, domainIndex) => {
+    domain.topics.forEach((topic, topicIndex) => {
+      const path = (field?: string) =>
+        ['config', 'domains', String(domainIndex), 'topics', String(topicIndex), ...(field ? [field] : [])].join('.')
+      if (typeof topic !== 'object' || topic === null || Array.isArray(topic)) {
+        topicIssues.push(`${path()}: Expected object, received string`)
+        return
+      }
+      const name = (topic as TopicInput).name
+      const context = (topic as TopicInput).context
+      if (typeof name !== 'string' || !name.trim()) {
+        topicIssues.push(`${path('name')}: Required`)
+      }
+      if (context === undefined) {
+        topicIssues.push(`${path('context')}: Required`)
+      } else if (typeof context !== 'string') {
+        topicIssues.push(`${path('context')}: Expected string, received ${typeof context}`)
+      } else {
+        const trimmed = context.trim()
+        if (trimmed.length < 20) {
+          topicIssues.push(`${path('context')}: String must contain at least 20 character(s)`)
+        } else if (trimmed.length > 1500) {
+          topicIssues.push(`${path('context')}: String must contain at most 1500 character(s)`)
+        }
+      }
+    })
+  })
+  if (topicIssues.length > 0) {
+    return topicIssues.join('; ')
   }
 
   return null
@@ -302,12 +364,21 @@ export const handlers = [
       return HttpResponse.json({ error: 'InvalidRequest', message: invalid }, { status: 400 })
     }
     const config = input.config
-    const domains: KnowledgeDomain[] = config.domains.map((d) => ({
-      id: uuid(),
-      name: d.name,
-      weight: d.weight,
-      topics: d.topics.map((name) => ({ id: uuid(), name })),
-    }))
+    const domains: KnowledgeDomain[] = config.domains.map((d) => {
+      const existingDomain = cert.config.domains.find((ed) => ed.name === d.name)
+      const topics: Topic[] = d.topics.map((t) => {
+        const existingTopic = existingDomain?.topics.find((et) => et.name === t.name)
+        return existingTopic
+          ? { id: existingTopic.id, name: t.name, context: t.context }
+          : { id: uuid(), name: t.name, context: t.context }
+      })
+      return {
+        id: existingDomain ? existingDomain.id : uuid(),
+        name: d.name,
+        weight: d.weight,
+        topics,
+      }
+    })
     cert.name = input.name
     cert.description = input.description
     cert.isActive = input.isActive
