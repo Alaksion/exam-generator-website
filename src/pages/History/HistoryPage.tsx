@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useDeleteExam, useExamDownload, useExams } from '@/hooks/use-exams'
 import { NetworkErrorBlock } from '@/components/NetworkErrorBlock'
@@ -162,25 +162,16 @@ export function HistoryPage() {
                         Start exam
                       </Button>
                     )}
-                    {exam.status === 'FAILED' && (
-                      <p className="max-w-[200px] text-right text-xs text-destructive">
-                        Generation failed.{' '}
-                        <Link
-                          to="/"
-                          className="font-medium text-primary hover:underline"
-                        >
-                          Generate a new exam
-                        </Link>
-                      </p>
+                    {exam.status === 'READY' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(exam)}
+                        disabled={download.isPending}
+                      >
+                        Download
+                      </Button>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownload(exam)}
-                      disabled={download.isPending}
-                    >
-                      Download
-                    </Button>
                     <Button
                       variant="destructive"
                       size="sm"
