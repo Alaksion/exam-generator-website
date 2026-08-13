@@ -4,9 +4,31 @@ Domain language for the React web app that consumes the `exam-generator` backend
 
 ## Language
 
-**ApiKey**:
-The shared backend secret that a user enters once and is sent in the `x-api-key` header on every API request. The same key is used by all users of a given deployment.
-_Avoid_: API key, token, secret.
+## Identity & authorization
+
+**User**:
+The authenticated entity that uses the app, identified by its Cognito `sub`. The backend resolves the caller from the ID token in the `Authorization: Bearer` header and scopes data (notably exams) to the User through their `sub`.
+_Avoid_: Account, member, person.
+
+**Role**:
+The authorization level a User holds: `customer` or `admin`. Exposed by `GET /v1/me` and used to drive role-aware UI; the backend still enforces role with `403` regardless of the UI.
+_Avoid_: Permission, access level, tier.
+
+**Customer**:
+A User with the `customer` role — the normal end-user who browses the Catalog and takes Exams.
+_Avoid_: Client, user (where the role matters).
+
+**Admin**:
+A User with the `admin` role, who additionally manages Certifications.
+_Avoid_: Moderator, superuser, manager.
+
+**Session**:
+The User's signed-in state, carried as a Cognito ID token sent as a `Bearer` header. The `ID`/`Access` tokens live only in memory; the `RefreshToken` is persisted in `sessionStorage` so a reload can restore the Session. The app treats it as live while `/v1/me` succeeds; on `401` it refreshes then re-tries, and on failure forces a re-login.
+_Avoid_: Login state, auth, session token.
+
+**Sign out**:
+The action that ends the User's Session: it clears the in-memory and `sessionStorage` tokens and returns the User to the login screen. Local only — it does not call a Cognito global-signout endpoint in this MVP.
+_Avoid_: Log out, logout, disconnect.
 
 **Certification**:
 A catalog entry describing an exam type that can be generated, e.g. `AWS Certified Cloud Practitioner`.
@@ -41,8 +63,8 @@ The lifecycle state of an exam: `GENERATING`, `READY`, or `FAILED`.
 _Avoid_: Status (unqualified), state.
 
 **History**:
-The global list of all ready exams, fetched from `GET /v1/exams`. Not personal to a user in this MVP.
-_Avoid_: Library, My exams, Shared exams.
+The list of the signed-in User's own ready exams, fetched from `GET /v1/exams` and scoped to the caller. Personal to each User, not shared.
+_Avoid_: Library, My exams, Shared exams, Global history.
 
 **Quiz**:
 The in-progress view of an Attempt where the user selects answers one question at a time.
