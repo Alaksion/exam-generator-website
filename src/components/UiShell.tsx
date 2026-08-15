@@ -4,8 +4,9 @@ import { useAuth } from '@/lib/auth'
 
 export function UiShell() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const { clearKey } = useAuth()
+  const { signOut, user } = useAuth()
   const location = useLocation()
+  const isAdmin = user?.role === 'admin'
 
   const closeMenu = () => setMenuOpen(false)
 
@@ -13,7 +14,7 @@ export function UiShell() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <a href="/manage/certifications" className="font-heading text-lg font-medium">
+          <a href="/" className="font-heading text-lg font-medium">
             Mock Exams
           </a>
           <nav className="hidden items-center gap-1 md:flex" aria-label="Navigation">
@@ -31,16 +32,18 @@ export function UiShell() {
             >
               History
             </a>
-            <a
-              href="/manage/certifications"
-              aria-current={location.pathname.startsWith('/manage') ? 'page' : undefined}
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground"
-            >
-              Certifications
-            </a>
+            {isAdmin && (
+              <a
+                href="/manage/certifications"
+                aria-current={location.pathname.startsWith('/manage') ? 'page' : undefined}
+                className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground"
+              >
+                Certifications
+              </a>
+            )}
             <button
               type="button"
-              onClick={clearKey}
+              onClick={signOut}
               className="ml-2 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               Sign out
@@ -66,18 +69,20 @@ export function UiShell() {
             >
               History
             </a>
-            <a
-              href="/manage/certifications"
-              onClick={closeMenu}
-              className="block rounded-md px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              Certifications
-            </a>
+            {isAdmin && (
+              <a
+                href="/manage/certifications"
+                onClick={closeMenu}
+                className="block rounded-md px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                Certifications
+              </a>
+            )}
             <button
               type="button"
               onClick={() => {
                 closeMenu()
-                clearKey()
+                signOut()
               }}
               className="block w-full rounded-md px-2 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
             >

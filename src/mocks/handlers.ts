@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw'
+import type { Me } from '@/lib/types'
 
 type Provider = 'aws' | 'azure' | 'gcp'
 type Difficulty = 'easy' | 'medium' | 'hard'
@@ -74,6 +75,7 @@ interface Question {
 
 interface Exam {
   id: string
+  ownerId: string
   certificationId: string
   provider: Provider
   title: string
@@ -86,6 +88,33 @@ interface Exam {
 }
 
 const uuid = () => crypto.randomUUID()
+
+const users: Me[] = [
+  {
+    sub: 'u0000000-0000-0000-0000-000000000001',
+    email: 'admin@exam.io',
+    role: 'admin',
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    sub: 'u0000000-0000-0000-0000-000000000002',
+    email: 'customer@exam.io',
+    role: 'customer',
+    createdAt: '2024-01-02T00:00:00.000Z',
+  },
+]
+
+function tokenToSub(request: Request): string | null {
+  const auth = request.headers.get('Authorization')
+  if (!auth?.startsWith('Bearer ')) return null
+  return auth.slice('Bearer '.length)
+}
+
+function resolveUser(request: Request): Me | null {
+  const sub = tokenToSub(request)
+  if (!sub) return null
+  return users.find((u) => u.sub === sub) ?? null
+}
 
 const providers: Provider[] = ['aws', 'azure', 'gcp']
 const difficulties: Difficulty[] = ['easy', 'medium', 'hard']
@@ -316,6 +345,17 @@ function completeExam(exam: Exam): void {
 export const handlers = [
   http.get('/v1/health', () => HttpResponse.json({ status: 'ok' })),
 
+  http.get('/v1/me', ({ request }) => {
+    const user = resolveUser(request)
+    if (!user) {
+      return HttpResponse.json(
+        { error: 'Unauthorized', message: 'Missing or invalid bearer token.' },
+        { status: 401 },
+      )
+    }
+    return HttpResponse.json(user)
+  }),
+
   http.get('/v1/certifications', () =>
     HttpResponse.json({ items: certifications }),
   ),
@@ -332,6 +372,12 @@ export const handlers = [
   }),
 
   http.post('/v1/certifications', async ({ request }) => {
+    if (resolveUser(request)?.role !== 'admin') {
+      return HttpResponse.json(
+        { error: 'Forbidden', message: 'Only admins can manage certifications.' },
+        { status: 403 },
+      )
+    }
     const input = (await request.json()) as CertificationInput
     const invalid = validateCertificationInput(input, true)
     if (invalid) {
@@ -355,7 +401,13 @@ export const handlers = [
     return HttpResponse.json(cert, { status: 201 })
   }),
 
-  http.put('/v1/certifications/:id', async ({ params, request }) => {
+  http.put('/v1/certifications/:id', async ({ request, params }) => {
+    if (resolveUser(request)?.role !== 'admin') {
+      return HttpResponse.json(
+        { error: 'Forbidden', message: 'Only admins can manage certifications.' },
+        { status: 403 },
+      )
+    }
     const cert = certifications.find((c) => c.id === params.id)
     if (!cert) {
       return HttpResponse.json(
@@ -398,9 +450,17 @@ export const handlers = [
         { status: 404 },
       )
     }
+    const ownerId = tokenToSub(request)
+    if (!ownerId) {
+      return HttpResponse.json(
+        { error: 'Unauthorized', message: 'Missing or invalid bearer token.' },
+        { status: 401 },
+      )
+    }
     const now = new Date().toISOString()
     const exam: Exam = {
       id: uuid(),
+      ownerId,
       certificationId: cert.id,
       provider: cert.provider,
       title: `${cert.name} - Practice Exam ${now}`,
@@ -422,8 +482,11 @@ export const handlers = [
     const provider = url.searchParams.get('provider')
     const certificationId = url.searchParams.get('certificationId')
     const limit = Number(url.searchParams.get('limit') ?? '20')
+    const ownerId = tokenToSub(request)
 
-    let items = exams.filter((e) => e.status === status)
+    let items = exams.filter(
+      (e) => e.ownerId === ownerId && e.status === status,
+    )
     if (provider) items = items.filter((e) => e.provider === provider)
     if (certificationId) {
       items = items.filter((e) => e.certificationId === certificationId)
@@ -489,12 +552,19 @@ export const handlers = [
     })
   }),
 
-  http.delete('/v1/exams/:id', ({ params }) => {
-    const index = exams.findIndex((e) => e.id === params.id)
-    if (index === -1) {
+  http.delete('/v1/exams/:id', ({ request, params }) => {
+    const exam = exams.find((e) => e.id === params.id)
+    if (!exam) {
       return HttpResponse.json({ error: 'NotFound', message: 'Exam not found.' }, { status: 404 })
     }
-    exams.splice(index, 1)
+    const ownerId = tokenToSub(request)
+    if (ownerId !== exam.ownerId) {
+      return HttpResponse.json(
+        { error: 'Forbidden', message: 'You do not own this exam.' },
+        { status: 403 },
+      )
+    }
+    exams.splice(exams.indexOf(exam), 1)
     return new HttpResponse(null, { status: 204 })
   }),
 ]

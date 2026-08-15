@@ -13,10 +13,16 @@ const VALID_CONTEXT =
 const MIN = 20
 const MAX = 1500
 
+const ADMIN = 'Bearer u0000000-0000-0000-0000-000000000001'
+const CUSTOMER = 'Bearer u0000000-0000-0000-0000-000000000002'
+
 async function createCertification(body: unknown): Promise<Response> {
   return fetch('/v1/certifications', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: ADMIN,
+    },
     body: JSON.stringify(body),
   })
 }
@@ -43,7 +49,102 @@ async function parse<T = unknown>(res: Response): Promise<T> {
   return res.json() as Promise<T>
 }
 
+describe('me mock - identity resolution', () => {
+  it('returns 401 without a bearer token', async () => {
+    const res = await fetch('/v1/me')
+    expect(res.status).toBe(401)
+  })
+
+  it('resolves a known sub to its profile', async () => {
+    const res = await fetch('/v1/me', {
+      headers: {
+        Authorization:
+          'Bearer u0000000-0000-0000-0000-000000000001',
+      },
+    })
+    expect(res.status).toBe(200)
+    const me = await parse<{
+      sub: string
+      email: string
+      role: string
+    }>(res)
+    expect(me).toMatchObject({ email: 'admin@exam.io', role: 'admin' })
+  })
+
+  it('resolves a customer sub to a customer role', async () => {
+    const res = await fetch('/v1/me', {
+      headers: {
+        Authorization:
+          'Bearer u0000000-0000-0000-0000-000000000002',
+      },
+    })
+    expect(res.status).toBe(200)
+    const me = await parse<{ role: string }>(res)
+    expect(me.role).toBe('customer')
+  })
+})
+
+describe('exams mock - per-user ownership', () => {
+  it('scopes the exam list to the caller and hides other users exams', async () => {
+    const createdByAdmin = await fetch('/v1/exams', {
+      method: 'POST',
+      headers: { Authorization: ADMIN },
+      body: JSON.stringify({ certificationId: 'c0000000-0000-0000-0000-000000000001' }),
+    })
+    expect(createdByAdmin.status).toBe(201)
+    const { id } = await parse<{ id: string }>(createdByAdmin)
+
+    const customerList = await fetch('/v1/exams', {
+      headers: { Authorization: CUSTOMER },
+    })
+    const customerPage = await parse<{ items: Array<{ id: string }> }>(customerList)
+    expect(customerPage.items.map((e) => e.id)).not.toContain(id)
+  })
+
+  it('returns a 403 when deleting an exam the caller does not own', async () => {
+    const createdByAdmin = await fetch('/v1/exams', {
+      method: 'POST',
+      headers: { Authorization: ADMIN },
+      body: JSON.stringify({ certificationId: 'c0000000-0000-0000-0000-000000000001' }),
+    })
+    const { id } = await parse<{ id: string }>(createdByAdmin)
+
+    const res = await fetch(`/v1/exams/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: CUSTOMER },
+    })
+    expect(res.status).toBe(403)
+  })
+
+  it('deletes an exam the caller owns', async () => {
+    const createdByCustomer = await fetch('/v1/exams', {
+      method: 'POST',
+      headers: { Authorization: CUSTOMER },
+      body: JSON.stringify({ certificationId: 'c0000000-0000-0000-0000-000000000001' }),
+    })
+    const { id } = await parse<{ id: string }>(createdByCustomer)
+
+    const res = await fetch(`/v1/exams/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: CUSTOMER },
+    })
+    expect(res.status).toBe(204)
+  })
+})
+
 describe('certifications mock - topic context contract', () => {
+  it('rejects a certification create from a non-admin with a 403', async () => {
+    const res = await fetch('/v1/certifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: CUSTOMER,
+      },
+      body: JSON.stringify(validCreate(undefined, 'CODE-D')),
+    })
+    expect(res.status).toBe(403)
+  })
+
   it('seeds the catalog with topics that all carry at least 20-char context', async () => {
     const res = await fetch('/v1/certifications')
     const { items } = await parse<{
@@ -148,7 +249,7 @@ describe('certifications mock - topic context contract', () => {
     const newContext = 'Amazon S3 covers object storage, storage classes, versioning, lifecycle rules, and website hosting.'
     const res = await fetch(`/v1/certifications/${cert.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: ADMIN },
       body: JSON.stringify({
         name: cert.name,
         description: 'Updated',
@@ -209,7 +310,7 @@ describe('certifications mock - topic context contract', () => {
 
     const putRes = await fetch(`/v1/certifications/${cert.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: ADMIN },
       body: JSON.stringify(roundTripBody),
     })
     expect(putRes.status).toBe(200)

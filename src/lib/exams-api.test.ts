@@ -1,20 +1,21 @@
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
-import { setApiKey, clearApiKey, ApiRequestError } from '@/lib/api'
+import { ApiRequestError } from '@/lib/api'
 import { createExam, deleteExam, getExam, getExamDownload, getExamStatus, listExams } from '@/lib/exams-api'
+import { clearSession, saveIdAccess } from '@/lib/session'
 
 const server = setupServer()
 
 beforeAll(() => server.listen())
 afterEach(() => {
   server.resetHandlers()
-  clearApiKey()
+  clearSession()
 })
 afterAll(() => server.close())
 
 describe('createExam', () => {
   it('POSTs the certification id and returns the new exam id and status', async () => {
-    setApiKey('my-key')
+    saveIdAccess({ idToken: 'id-token', accessToken: 'access-token' })
     let capturedBody: unknown
     let capturedMethod = ''
     let capturedPath = ''
@@ -78,7 +79,7 @@ describe('createExam', () => {
 
 describe('getExamStatus', () => {
   it('GETs the exam status by id', async () => {
-    setApiKey('my-key')
+    saveIdAccess({ idToken: 'id-token', accessToken: 'access-token' })
     let capturedPath = ''
 
     server.use(
@@ -122,7 +123,7 @@ describe('getExamStatus', () => {
 
 describe('getExam', () => {
   it('GETs the full ready exam by id', async () => {
-    setApiKey('my-key')
+    saveIdAccess({ idToken: 'id-token', accessToken: 'access-token' })
     let capturedPath = ''
 
     server.use(
@@ -169,7 +170,7 @@ describe('getExam', () => {
 
 describe('getExamDownload', () => {
   it('GETs the presigned download URL for a ready exam', async () => {
-    setApiKey('my-key')
+    saveIdAccess({ idToken: 'id-token', accessToken: 'access-token' })
     let capturedPath = ''
 
     server.use(
@@ -207,7 +208,7 @@ describe('getExamDownload', () => {
 
 describe('listExams', () => {
   it('GETs exams with a status query param', async () => {
-    setApiKey('my-key')
+    saveIdAccess({ idToken: 'id-token', accessToken: 'access-token' })
     let capturedSearch = ''
 
     server.use(
@@ -266,7 +267,7 @@ describe('listExams', () => {
 
 describe('deleteExam', () => {
   it('DELETEs the exam and resolves on 204', async () => {
-    setApiKey('my-key')
+    saveIdAccess({ idToken: 'id-token', accessToken: 'access-token' })
     let capturedMethod = ''
     let capturedPath = ''
 

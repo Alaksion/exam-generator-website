@@ -26,7 +26,7 @@ servers:
     description: Local SAM emulation.
 
 security:
-  - ApiKeyAuth: []
+  - CognitoAuth: []
 
 tags:
   - name: Health
@@ -57,6 +57,24 @@ paths:
                     enum: [ok]
               example:
                 status: ok
+
+  /v1/me:
+    get:
+      tags: [Exams]
+      summary: Resolve the signed-in caller's identity
+      description: |
+        Returns the caller's identity resolved from the bearer ID token. Used as
+        a session-liveness check and to drive role-aware UI.
+      operationId: getMe
+      responses:
+        '200':
+          description: The caller's profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/certifications:
     post:
@@ -241,10 +259,11 @@ paths:
       tags: [Exams]
       summary: List exams
       description: |
-        Lists exams, newest first, filtered by status (default `READY`).
-        Paginated with an opaque base64 cursor. When `certificationId` is
-        provided, results are scoped to that certification (status filter
-        still applies).
+        Lists the caller's own exams, newest first, filtered by status (default
+        `READY`). Scoped server-side to the bearer token's `sub` — a caller only
+        ever sees exams they own. Paginated with an opaque base64 cursor. When
+        `certificationId` is provided, results are scoped to that certification
+        (status filter still applies).
       operationId: listExams
       parameters:
         - name: status
@@ -332,12 +351,15 @@ paths:
       summary: Delete an exam
       description: |
         Permanently removes the exam's DynamoDB row and its S3 artifacts
-        (canonical JSON and PDF).
+        (canonical JSON and PDF). The caller must own the exam; deleting another
+        user's exam returns `403`.
       operationId: deleteExam
       responses:
         '204':
           description: Exam deleted.
           content: {}
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -412,11 +434,11 @@ paths:
 
 components:
   securitySchemes:
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: x-api-key
-      description: API key required by all endpoints except `/v1/health`.
+    CognitoAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Cognito ID token required by all endpoints except `/v1/health`.
 
   parameters:
     Id:
@@ -429,6 +451,18 @@ components:
       description: Resource UUID.
 
   responses:
+    Unauthorized:
+      description: Missing or invalid bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: The caller is not permitted to perform this action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     NotFound:
       description: Resource not found.
       content:
@@ -461,6 +495,21 @@ components:
             $ref: '#/components/schemas/Error'
 
   schemas:
+    Me:
+      type: object
+      required: [sub, email, role, createdAt]
+      properties:
+        sub:
+          type: string
+          description: The caller's Cognito subject (stable identity / exam ownerId).
+        email:
+          type: string
+        role:
+          type: string
+          enum: [customer, admin]
+        createdAt:
+          type: string
+          format: date-time
     Uuid:
       type: string
       format: uuid

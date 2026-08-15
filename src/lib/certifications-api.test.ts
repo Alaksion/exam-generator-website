@@ -1,15 +1,16 @@
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
-import { setApiKey, clearApiKey, ApiRequestError } from '@/lib/api'
+import { ApiRequestError } from '@/lib/api'
 import { getCertification, updateCertification } from '@/lib/certifications-api'
 import type { CertificationUpdate } from '@/lib/types'
+import { clearSession, saveIdAccess } from '@/lib/session'
 
 const server = setupServer()
 
 beforeAll(() => server.listen())
 afterEach(() => {
   server.resetHandlers()
-  clearApiKey()
+  clearSession()
 })
 afterAll(() => server.close())
 
@@ -66,7 +67,7 @@ const update: CertificationUpdate = {
 
 describe('getCertification', () => {
   it('GETs a certification by id', async () => {
-    setApiKey('my-key')
+    saveIdAccess({ idToken: 'id-token', accessToken: 'access-token' })
     let capturedPath = ''
 
     server.use(
@@ -105,7 +106,7 @@ describe('getCertification', () => {
 
 describe('updateCertification', () => {
   it('PUTs only the mutable fields to /v1/certifications/:id', async () => {
-    setApiKey('my-key')
+    saveIdAccess({ idToken: 'id-token', accessToken: 'access-token' })
     let capturedPath = ''
     let capturedMethod = ''
     let capturedBody: unknown
