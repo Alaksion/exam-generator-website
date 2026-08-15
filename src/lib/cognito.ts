@@ -19,7 +19,7 @@ export interface CognitoClient {
 
 let configured = false
 
-function ensureConfigured(): void {
+export function ensureConfigured(): void {
   if (configured) return
   const poolId = import.meta.env.VITE_USER_POOL_ID as string | undefined
   const clientId = import.meta.env.VITE_USER_POOL_CLIENT_ID as string | undefined
