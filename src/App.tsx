@@ -11,7 +11,6 @@ import { ExamStatusPage } from "@/pages/ExamStatus/ExamStatusPage";
 import { QuizPage } from "@/pages/Quiz/QuizPage";
 import { ReviewPage } from "@/pages/Review/ReviewPage";
 import { HistoryPage } from "@/pages/History/HistoryPage";
-
 import type { Role } from "@/lib/types";
 
 function AdminRoute({ role, children }: { role: Role; children: React.ReactNode }) {
@@ -22,7 +21,16 @@ function AdminRoute({ role, children }: { role: Role; children: React.ReactNode 
 }
 
 function AuthenticatedApp() {
-  const role = useUserRole();
+  const { user } = useAuth();
+
+  // Identity (and therefore role) resolves asynchronously after login / reload.
+  // Render a placeholder until the user is loaded so an admin is not
+  // transiently redirected away from /manage/* by a defaulted "customer" role.
+  if (!user) {
+    return <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Loading…</div>;
+  }
+
+  const role = user.role;
   return (
     <Routes>
       <Route element={<UiShell />}>
@@ -47,11 +55,6 @@ function AuthenticatedApp() {
       </Route>
     </Routes>
   );
-}
-
-function useUserRole(): Role {
-  const { user } = useAuth();
-  return user?.role ?? "customer";
 }
 
 function App() {

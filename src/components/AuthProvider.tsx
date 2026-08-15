@@ -4,6 +4,7 @@ import { cognitoClient, type CognitoClient } from '@/lib/cognito'
 import { getMe } from '@/lib/me'
 import {
   clearSession,
+  getBearerToken,
   getStoredRefreshToken,
   refreshSession,
   registerSessionRefresher,
@@ -12,7 +13,7 @@ import {
 } from '@/lib/session'
 import type { Me } from '@/lib/types'
 
-function bootstrap(): boolean {
+function hasStoredSession(): boolean {
   return getStoredRefreshToken() !== null
 }
 
@@ -23,16 +24,18 @@ export function AuthProvider({
   children: React.ReactNode
   client?: CognitoClient
 }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => bootstrap())
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => hasStoredSession())
   const [user, setUser] = useState<Me | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated) return
     let cancelled = false
 
-    const restore = async () => {
+    const resolveIdentity = async () => {
       try {
-        if (getStoredRefreshToken() && !(await refreshSession())) {
+        // A fresh login already holds an id token; only a reload needs the
+        // stored refresh token to be exchanged before calling /v1/me.
+        if (!getBearerToken() && hasStoredSession() && !(await refreshSession())) {
           throw new Error('session refresh failed')
         }
         const me = await getMe()
@@ -44,7 +47,7 @@ export function AuthProvider({
         }
       }
     }
-    restore()
+    resolveIdentity()
 
     return () => {
       cancelled = true
@@ -61,8 +64,6 @@ export function AuthProvider({
     async (email: string, password: string) => {
       const tokens = await client.signIn(email, password)
       saveSession(tokens)
-      const me = await getMe()
-      setUser(me)
       setIsAuthenticated(true)
     },
     [client],

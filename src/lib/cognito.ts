@@ -3,7 +3,6 @@ import {
   fetchAuthSession,
   getCurrentUser,
   signIn as amplifySignIn,
-  signOut,
   type AuthSession,
 } from 'aws-amplify/auth'
 
@@ -16,7 +15,6 @@ export interface CognitoTokens {
 export interface CognitoClient {
   signIn(username: string, password: string): Promise<CognitoTokens>
   refresh(refreshToken: string): Promise<Pick<CognitoTokens, 'idToken' | 'accessToken'>>
-  signOut(): Promise<void>
 }
 
 let configured = false
@@ -68,10 +66,5 @@ export const cognitoClient: CognitoClient = {
     const session = await fetchAuthSession({ forceRefresh: true })
     const tokens = toCognitoTokens(session.tokens)
     return { idToken: tokens.idToken, accessToken: tokens.accessToken }
-  },
-
-  async signOut() {
-    ensureConfigured()
-    await signOut()
   },
 }

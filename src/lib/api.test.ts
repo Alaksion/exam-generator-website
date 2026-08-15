@@ -18,7 +18,7 @@ afterEach(() => {
 afterAll(() => server.close())
 
 describe('apiRequest', () => {
-  it('attaches', async () => {
+  it('sends the bearer id token when the session has one', async () => {
     saveIdAccess({ idToken: 'id-token', accessToken: 'access-token' })
     let capturedHeaders: Record<string, string> = {}
 

@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
-import { ApiRequestError } from '../lib/api'
+import { ApiRequestError } from '@/lib/api'
 import { getCertification, updateCertification } from '@/lib/certifications-api'
 import type { CertificationUpdate } from '@/lib/types'
 import { clearSession, saveIdAccess } from '@/lib/session'

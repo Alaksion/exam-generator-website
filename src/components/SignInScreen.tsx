@@ -1,6 +1,9 @@
 import { type FormEvent, useState } from 'react'
 import { useAuth } from '@/lib/auth'
 import { ApiRequestError } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export function SignInScreen() {
   const { signIn } = useAuth()
@@ -35,57 +38,51 @@ export function SignInScreen() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-lg border bg-card p-8 shadow-sm"
       >
-        <h1 className="text-xl font-semibold mb-1">Sign in</h1>
-        <p className="text-sm text-muted-foreground mb-6">
+        <h1 className="mb-1 text-xl font-semibold">Sign in</h1>
+        <p className="mb-6 text-sm text-muted-foreground">
           Use your email and password to access the exam generator.
         </p>
 
-        <label htmlFor="email" className="mb-1 block text-sm font-medium">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value)
-            setError(null)
-          }}
-          placeholder="you@example.com"
-          className="mb-4 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          autoFocus
-        />
+        <div className="mb-4 grid gap-1.5">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              setError(null)
+            }}
+            placeholder="you@example.com"
+            autoFocus
+          />
+        </div>
 
-        <label htmlFor="password" className="mb-1 block text-sm font-medium">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value)
-            setError(null)
-          }}
-          className="mb-4 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+        <div className="mb-4 grid gap-1.5">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value)
+              setError(null)
+            }}
+          />
+        </div>
 
         {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? 'Signing in…' : 'Sign in'}
-        </button>
+        </Button>
       </form>
     </div>
   )

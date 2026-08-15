@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
-import { ApiRequestError } from '../lib/api'
+import { ApiRequestError } from '@/lib/api'
 import { createExam, deleteExam, getExam, getExamDownload, getExamStatus, listExams } from '@/lib/exams-api'
 import { clearSession, saveIdAccess } from '@/lib/session'
 
