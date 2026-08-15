@@ -14,7 +14,7 @@ function messageForError(error: ApiRequestError): string {
     case 400:
       return 'The request was invalid. Please check your input and try again.'
     case 401:
-      return 'Your API key is invalid or has expired. Please re-enter it.'
+      return 'Your session has expired. Please sign in again.'
     case 404:
       return 'The requested resource was not found.'
     case 409:

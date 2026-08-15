@@ -1,9 +1,11 @@
 import { createContext, useContext } from 'react'
+import type { Me } from '@/lib/types'
 
 export interface AuthContextValue {
   isAuthenticated: boolean
-  setKey: (key: string) => void
-  clearKey: () => void
+  user: Me | null
+  signIn: (email: string, password: string) => Promise<void>
+  signOut: () => void
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

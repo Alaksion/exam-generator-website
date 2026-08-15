@@ -1,19 +1,20 @@
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
-import { apiRequest, ApiRequestError, clearApiKey, setApiKey } from '@/lib/api'
+import { apiRequest, ApiRequestError } from '@/lib/api'
+import { clearSession, saveIdAccess } from '@/lib/session'
 
 const server = setupServer()
 
 beforeAll(() => server.listen())
 afterEach(() => {
   server.resetHandlers()
-  clearApiKey()
+  clearSession()
 })
 afterAll(() => server.close())
 
 describe('apiRequest', () => {
-  it('attaches x-api-key header when key is set', async () => {
-    setApiKey('my-key')
+  it('attaches', async () => {
+    saveIdAccess({ idToken: 'id-token', accessToken: 'access-token' })
     let capturedHeaders: Record<string, string> = {}
 
     server.use(
@@ -25,14 +26,29 @@ describe('apiRequest', () => {
 
     await apiRequest('/v1/health')
 
-    expect(capturedHeaders['x-api-key']).toBe('my-key')
+    expect(capturedHeaders['authorization']).toBe('Bearer id-token')
+  })
+
+  it('sends no auth header when no session exists', async () => {
+    let capturedHeaders: Record<string, string> = {}
+
+    server.use(
+      http.get('/v1/health', ({ request }) => {
+        capturedHeaders = Object.fromEntries(request.headers.entries())
+        return HttpResponse.json({ status: 'ok' })
+      }),
+    )
+
+    await apiRequest('/v1/health')
+
+    expect(capturedHeaders['authorization']).toBeUndefined()
   })
 
   it('throws ApiRequestError with status on 401', async () => {
     server.use(
       http.get('/v1/test', () =>
         HttpResponse.json(
-          { error: 'Unauthorized', message: 'Invalid key' },
+          { error: 'Unauthorized', message: 'Invalid token' },
           { status: 401 },
         ),
       ),
@@ -59,20 +75,21 @@ describe('apiRequest', () => {
     expect((err as ApiRequestError).status).toBe(429)
   })
 
-  it('clears key on 401', async () => {
-    setApiKey('will-be-cleared')
+  it('throws ApiRequestError on 403 without clearing the session', async () => {
+    saveIdAccess({ idToken: 'id-token', accessToken: 'access-token' })
 
     server.use(
       http.get('/v1/test', () =>
         HttpResponse.json(
-          { error: 'Unauthorized', message: 'Bad key' },
-          { status: 401 },
+          { error: 'Forbidden', message: 'Not allowed' },
+          { status: 403 },
         ),
       ),
     )
 
-    await apiRequest('/v1/test').catch(() => {})
-
-    expect(localStorage.getItem('x-api-key')).toBeNull()
+    const err = await apiRequest('/v1/test').catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ApiRequestError)
+    expect((err as ApiRequestError).status).toBe(403)
+    expect((err as ApiRequestError).code).toBe('Forbidden')
   })
 })

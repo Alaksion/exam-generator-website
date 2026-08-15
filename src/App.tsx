@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import { ApiKeyGate } from "@/components/ApiKeyGate";
+import { SignInScreen } from "@/components/SignInScreen";
 import { useAuth } from "@/lib/auth";
 import { UiShell } from "@/components/UiShell";
 import { CatalogPage } from "@/pages/Catalog/CatalogPage";
@@ -40,7 +40,7 @@ function App() {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return <ApiKeyGate />;
+    return <SignInScreen />;
   }
 
   return <AuthenticatedApp />;

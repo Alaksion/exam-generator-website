@@ -1,3 +1,5 @@
+import { getBearerToken } from '@/lib/session'
+
 export interface ApiError {
   error: string
   message: string
@@ -18,34 +20,20 @@ export class ApiRequestError extends Error {
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
-function getApiKey(): string | null {
-  return localStorage.getItem('x-api-key')
-}
-
-export function clearApiKey(): void {
-  localStorage.removeItem('x-api-key')
-}
-
-export function setApiKey(key: string): void {
-  localStorage.setItem('x-api-key', key)
-}
-
-export function hasApiKey(): boolean {
-  return getApiKey() !== null
-}
-
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const key = getApiKey()
+  const token = getBearerToken()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> | undefined),
+    ...(Object.fromEntries(
+      new Headers(options.headers).entries(),
+    ) as Record<string, string>),
   }
 
-  if (key) {
-    headers['x-api-key'] = key
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
   }
 
   const res = await fetch(`${API_BASE}${path}`, {
@@ -55,7 +43,6 @@ export async function apiRequest<T>(
 
   if (!res.ok) {
     if (res.status === 401) {
-      clearApiKey()
       window.dispatchEvent(new CustomEvent('api:unauthorized'))
     }
 

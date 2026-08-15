@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth'
 
 export function UiShell() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const { clearKey } = useAuth()
+  const { signOut } = useAuth()
   const location = useLocation()
 
   const closeMenu = () => setMenuOpen(false)
@@ -40,7 +40,7 @@ export function UiShell() {
             </a>
             <button
               type="button"
-              onClick={clearKey}
+              onClick={signOut}
               className="ml-2 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               Sign out
@@ -77,7 +77,7 @@ export function UiShell() {
               type="button"
               onClick={() => {
                 closeMenu()
-                clearKey()
+                signOut()
               }}
               className="block w-full rounded-md px-2 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
             >
