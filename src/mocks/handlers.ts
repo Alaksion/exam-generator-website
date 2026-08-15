@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw'
+import type { Me } from '@/lib/types'
 
 type Provider = 'aws' | 'azure' | 'gcp'
 type Difficulty = 'easy' | 'medium' | 'hard'
@@ -88,14 +89,7 @@ interface Exam {
 
 const uuid = () => crypto.randomUUID()
 
-interface MockUser {
-  sub: string
-  email: string
-  role: 'customer' | 'admin'
-  createdAt: string
-}
-
-const users: MockUser[] = [
+const users: Me[] = [
   {
     sub: 'u0000000-0000-0000-0000-000000000001',
     email: 'admin@exam.io',
@@ -116,7 +110,7 @@ function tokenToSub(request: Request): string | null {
   return auth.slice('Bearer '.length)
 }
 
-function resolveUser(request: Request): MockUser | null {
+function resolveUser(request: Request): Me | null {
   const sub = tokenToSub(request)
   if (!sub) return null
   return users.find((u) => u.sub === sub) ?? null
@@ -378,6 +372,12 @@ export const handlers = [
   }),
 
   http.post('/v1/certifications', async ({ request }) => {
+    if (resolveUser(request)?.role !== 'admin') {
+      return HttpResponse.json(
+        { error: 'Forbidden', message: 'Only admins can manage certifications.' },
+        { status: 403 },
+      )
+    }
     const input = (await request.json()) as CertificationInput
     const invalid = validateCertificationInput(input, true)
     if (invalid) {
@@ -401,7 +401,13 @@ export const handlers = [
     return HttpResponse.json(cert, { status: 201 })
   }),
 
-  http.put('/v1/certifications/:id', async ({ params, request }) => {
+  http.put('/v1/certifications/:id', async ({ request, params }) => {
+    if (resolveUser(request)?.role !== 'admin') {
+      return HttpResponse.json(
+        { error: 'Forbidden', message: 'Only admins can manage certifications.' },
+        { status: 403 },
+      )
+    }
     const cert = certifications.find((c) => c.id === params.id)
     if (!cert) {
       return HttpResponse.json(

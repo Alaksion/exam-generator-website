@@ -13,10 +13,16 @@ const VALID_CONTEXT =
 const MIN = 20
 const MAX = 1500
 
+const ADMIN = 'Bearer u0000000-0000-0000-0000-000000000001'
+const CUSTOMER = 'Bearer u0000000-0000-0000-0000-000000000002'
+
 async function createCertification(body: unknown): Promise<Response> {
   return fetch('/v1/certifications', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: ADMIN,
+    },
     body: JSON.stringify(body),
   })
 }
@@ -78,9 +84,6 @@ describe('me mock - identity resolution', () => {
   })
 })
 
-const ADMIN = 'Bearer u0000000-0000-0000-0000-000000000001'
-const CUSTOMER = 'Bearer u0000000-0000-0000-0000-000000000002'
-
 describe('exams mock - per-user ownership', () => {
   it('scopes the exam list to the caller and hides other users exams', async () => {
     const createdByAdmin = await fetch('/v1/exams', {
@@ -130,6 +133,18 @@ describe('exams mock - per-user ownership', () => {
 })
 
 describe('certifications mock - topic context contract', () => {
+  it('rejects a certification create from a non-admin with a 403', async () => {
+    const res = await fetch('/v1/certifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: CUSTOMER,
+      },
+      body: JSON.stringify(validCreate(undefined, 'CODE-D')),
+    })
+    expect(res.status).toBe(403)
+  })
+
   it('seeds the catalog with topics that all carry at least 20-char context', async () => {
     const res = await fetch('/v1/certifications')
     const { items } = await parse<{
@@ -234,7 +249,7 @@ describe('certifications mock - topic context contract', () => {
     const newContext = 'Amazon S3 covers object storage, storage classes, versioning, lifecycle rules, and website hosting.'
     const res = await fetch(`/v1/certifications/${cert.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: ADMIN },
       body: JSON.stringify({
         name: cert.name,
         description: 'Updated',
@@ -295,7 +310,7 @@ describe('certifications mock - topic context contract', () => {
 
     const putRes = await fetch(`/v1/certifications/${cert.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: ADMIN },
       body: JSON.stringify(roundTripBody),
     })
     expect(putRes.status).toBe(200)
