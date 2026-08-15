@@ -6,10 +6,12 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { getAuthConfig } from '@/lib/auth-config'
 import { cn } from '@/lib/utils'
 
 export function SignInPage() {
   const { signIn } = useAuth()
+  const { googleEnabled, appleEnabled } = getAuthConfig()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -97,20 +99,28 @@ export function SignInPage() {
         {isSubmitting ? 'Signing in…' : 'Sign in'}
       </Button>
 
-      <div className="my-5 flex items-center gap-3">
-        <Separator className="flex-1" />
-        <span className="text-xs text-muted-foreground">or continue with</span>
-        <Separator className="flex-1" />
-      </div>
+      {googleEnabled || appleEnabled ? (
+        <>
+          <div className="my-5 flex items-center gap-3">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground">or continue with</span>
+            <Separator className="flex-1" />
+          </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-2">
-        <Button type="button" variant="outline">
-          Continue with Google
-        </Button>
-        <Button type="button" variant="outline">
-          Continue with Apple
-        </Button>
-      </div>
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            {googleEnabled && (
+              <Button type="button" variant="outline">
+                Continue with Google
+              </Button>
+            )}
+            {appleEnabled && (
+              <Button type="button" variant="outline">
+                Continue with Apple
+              </Button>
+            )}
+          </div>
+        </>
+      ) : null}
 
       <div className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
