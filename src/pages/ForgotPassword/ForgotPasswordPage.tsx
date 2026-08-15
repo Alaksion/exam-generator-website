@@ -1,23 +1,137 @@
-import { Link } from 'react-router-dom'
-import { buttonVariants } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { type FormEvent, useState } from 'react'
+import { useAuth } from '@/lib/auth'
+import {
+  ForgotPasswordError,
+  cognitoForgotPasswordService,
+  forgotPasswordErrorMessage,
+} from '@/lib/forgot-password'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export function ForgotPasswordPage() {
+  const { signIn } = useAuth()
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [stage, setStage] = useState<'request' | 'reset'>('request')
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleRequest = async (e: FormEvent) => {
+    e.preventDefault()
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setError('Please enter your email address.')
+      return
+    }
+    setError(null)
+    setIsSubmitting(true)
+    try {
+      await cognitoForgotPasswordService.requestCode(trimmedEmail)
+      setStage('reset')
+    } catch (err) {
+      setError(
+        err instanceof ForgotPasswordError
+          ? forgotPasswordErrorMessage(err.kind)
+          : 'Unable to request a reset.',
+      )
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleReset = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!code.trim() || !newPassword) {
+      setError('Please enter the reset code and a new password.')
+      return
+    }
+    setError(null)
+    setIsSubmitting(true)
+    try {
+      await cognitoForgotPasswordService.resetPassword(email, code.trim(), newPassword)
+      await signIn(email, newPassword)
+    } catch (err) {
+      setError(
+        err instanceof ForgotPasswordError
+          ? forgotPasswordErrorMessage(err.kind)
+          : 'Please sign in with your new password.',
+      )
+      setIsSubmitting(false)
+    }
+  }
+
   return (
-    <div className="w-full max-w-sm rounded-lg border bg-card p-8 shadow-sm">
-      <h1 className="mb-1 text-xl font-semibold">Reset your password</h1>
-      <p className="mb-6 text-sm text-muted-foreground">
-        Enter your email and we&apos;ll send you a reset code.
-      </p>
-      <p className="mb-6 text-sm text-muted-foreground">
-        Password recovery is coming next.
-      </p>
-      <Link
-        to="/"
-        className={cn(buttonVariants({ variant: 'link' }), 'h-auto px-0 py-0')}
-      >
-        Back to sign in
-      </Link>
-    </div>
+    <form
+      onSubmit={stage === 'request' ? handleRequest : handleReset}
+      className="w-full max-w-sm rounded-lg border bg-card p-8 shadow-sm"
+    >
+      <h1 className="mb-1 text-xl font-semibold">
+        {stage === 'request' ? 'Reset your password' : 'Enter the reset code'}
+      </h1>
+      {stage === 'request' ? (
+        <>
+          <p className="mb-6 text-sm text-muted-foreground">
+            Enter your email and we&apos;ll send you a one-time reset code.
+          </p>
+          <div className="mb-4 grid gap-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                setError(null)
+              }}
+              placeholder="you@example.com"
+              autoFocus
+            />
+          </div>
+          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Sending…' : 'Send reset code'}
+          </Button>
+        </>
+      ) : (
+        <>
+          <p className="mb-6 text-sm text-muted-foreground">
+            If that email belongs to an account, a reset code was sent to it.
+          </p>
+          <div className="mb-4 grid gap-1.5">
+            <Label htmlFor="code">Reset code</Label>
+            <Input
+              id="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value)
+                setError(null)
+              }}
+              autoFocus
+            />
+          </div>
+          <div className="mb-4 grid gap-1.5">
+            <Label htmlFor="new-password">New password</Label>
+            <Input
+              id="new-password"
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => {
+                setNewPassword(e.target.value)
+                setError(null)
+              }}
+            />
+          </div>
+          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Resetting…' : 'Reset password'}
+          </Button>
+        </>
+      )}
+    </form>
   )
 }
