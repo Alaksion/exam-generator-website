@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { SignUpError, cognitoSignUpService } from './signup'
+import { AuthFlowError } from './auth-errors'
+import { cognitoSignUpService } from './signup'
 
 const mocks = vi.hoisted(() => ({
   signUp: vi.fn(),
@@ -76,6 +77,8 @@ describe('cognitoSignUpService', () => {
   })
 
   it('exposes a distinct error type with its kind', () => {
-    expect(new SignUpError('email_in_use', 'x')).toMatchObject({ kind: 'email_in_use' })
+    expect(new AuthFlowError('email_in_use', 'x')).toMatchObject({
+      kind: 'email_in_use',
+    })
   })
 })

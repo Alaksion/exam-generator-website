@@ -5,7 +5,7 @@ import {
   signIn as amplifySignIn,
   type AuthSession,
 } from 'aws-amplify/auth'
-import { getAuthConfig } from './auth-config'
+import { getAuthConfig, isProviderEnabled } from './auth-config'
 
 export interface CognitoTokens {
   idToken: string
@@ -24,10 +24,11 @@ export function ensureConfigured(): void {
   if (configured) return
   const poolId = import.meta.env.VITE_USER_POOL_ID as string | undefined
   const clientId = import.meta.env.VITE_USER_POOL_CLIENT_ID as string | undefined
-  const { userPoolDomain, redirectUri, googleEnabled, appleEnabled } = getAuthConfig()
+  const config = getAuthConfig()
+  const { userPoolDomain, redirectUri } = config
   if (poolId && clientId) {
     const providers = (['Google', 'Apple'] as const).filter((p) =>
-      p === 'Google' ? googleEnabled : appleEnabled,
+      isProviderEnabled(config, p),
     )
     Amplify.configure({
       Auth: {

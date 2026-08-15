@@ -51,13 +51,13 @@ describe('cognitoForgotPasswordService', () => {
     })
   })
 
-  it('maps a wrong code to invalid_code', async () => {
+  it('maps a wrong code to code_mismatch', async () => {
     mocks.confirmResetPassword.mockRejectedValue(
       Object.assign(new Error('x'), { name: 'CodeMismatchException' }),
     )
     await expect(
       cognitoForgotPasswordService.resetPassword('a@b.co', '000000', 'X'),
-    ).rejects.toMatchObject({ kind: 'invalid_code' })
+    ).rejects.toMatchObject({ kind: 'code_mismatch' })
   })
 
   it('rethrows unknown errors', async () => {

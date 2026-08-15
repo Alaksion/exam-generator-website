@@ -6,19 +6,21 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { getAuthConfig } from '@/lib/auth-config'
+import { getAuthConfig, isProviderEnabled, type SocialProvider } from '@/lib/auth-config'
 import { cognitoSocialSignInService } from '@/lib/social-signin'
 import { cn } from '@/lib/utils'
 
 export function SignInPage() {
   const { signIn } = useAuth()
-  const { googleEnabled, appleEnabled } = getAuthConfig()
+  const authConfig = getAuthConfig()
+  const googleEnabled = isProviderEnabled(authConfig, 'Google')
+  const appleEnabled = isProviderEnabled(authConfig, 'Apple')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSocial = async (provider: 'Google' | 'Apple') => {
+  const handleSocial = async (provider: SocialProvider) => {
     setError(null)
     try {
       await cognitoSocialSignInService.start(provider)

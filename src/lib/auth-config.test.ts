@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildAuthConfig } from './auth-config'
+import { buildAuthConfig, isProviderEnabled } from './auth-config'
 
 describe('buildAuthConfig', () => {
   const origin = 'https://app.example.com'
@@ -44,5 +44,26 @@ describe('buildAuthConfig', () => {
     )
     expect(config.googleEnabled).toBe(true)
     expect(config.appleEnabled).toBe(false)
+  })
+
+  it('hides a toggled-on provider when the Hosted UI domain is absent', () => {
+    const config = buildAuthConfig(
+      { VITE_SOCIAL_GOOGLE_ENABLED: 'true', VITE_SOCIAL_APPLE_ENABLED: 'true' },
+      origin,
+    )
+    expect(isProviderEnabled(config, 'Google')).toBe(false)
+    expect(isProviderEnabled(config, 'Apple')).toBe(false)
+  })
+
+  it('offers a provider only when both enabled and the domain is configured', () => {
+    const config = buildAuthConfig(
+      {
+        VITE_USER_POOL_DOMAIN: 'mock-exams.auth.us-east-1.amazoncognito.com',
+        VITE_SOCIAL_GOOGLE_ENABLED: 'true',
+      },
+      origin,
+    )
+    expect(isProviderEnabled(config, 'Google')).toBe(true)
+    expect(isProviderEnabled(config, 'Apple')).toBe(false)
   })
 })

@@ -45,8 +45,12 @@ export function getAuthConfig(): AuthConfig {
   return buildAuthConfig(env, typeof window !== 'undefined' ? window.location.origin : '')
 }
 
-export function isProviderEnabled(provider: SocialProvider): boolean {
-  const config = getAuthConfig()
+/**
+ * A provider is offered only when it is both toggled on by config and the
+ * Hosted UI domain is configured — otherwise the Hosted UI flow cannot run.
+ */
+export function isProviderEnabled(config: AuthConfig, provider: SocialProvider): boolean {
+  if (!config.userPoolDomain || !config.redirectUri) return false
   if (provider === 'Google') return config.googleEnabled
   return config.appleEnabled
 }

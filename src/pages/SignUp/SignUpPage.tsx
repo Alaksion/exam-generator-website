@@ -1,10 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { useAuth } from '@/lib/auth'
-import {
-  SignUpError,
-  cognitoSignUpService,
-  signUpErrorMessage,
-} from '@/lib/signup'
+import { AuthFlowError, authFlowErrorMessage } from '@/lib/auth-errors'
+import { cognitoSignUpService } from '@/lib/signup'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -33,7 +30,7 @@ export function SignUpPage() {
       setStage('confirm')
     } catch (err) {
       setError(
-        err instanceof SignUpError ? signUpErrorMessage(err.kind) : 'Unable to create your account.',
+        err instanceof AuthFlowError ? authFlowErrorMessage(err.kind) : 'Unable to create your account.',
       )
     } finally {
       setIsSubmitting(false)
@@ -53,8 +50,8 @@ export function SignUpPage() {
       await signIn(email, password)
     } catch (err) {
       setError(
-        err instanceof SignUpError
-          ? signUpErrorMessage(err.kind)
+        err instanceof AuthFlowError
+          ? authFlowErrorMessage(err.kind)
           : 'Please sign in with your new account.',
       )
       setIsSubmitting(false)
@@ -68,8 +65,8 @@ export function SignUpPage() {
       await cognitoSignUpService.resendCode(email)
     } catch (err) {
       setError(
-        err instanceof SignUpError
-          ? signUpErrorMessage(err.kind)
+        err instanceof AuthFlowError
+          ? authFlowErrorMessage(err.kind)
           : 'Unable to resend the code. Please try again.',
       )
     } finally {

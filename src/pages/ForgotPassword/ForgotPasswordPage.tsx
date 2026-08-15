@@ -1,10 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { useAuth } from '@/lib/auth'
-import {
-  ForgotPasswordError,
-  cognitoForgotPasswordService,
-  forgotPasswordErrorMessage,
-} from '@/lib/forgot-password'
+import { AuthFlowError, authFlowErrorMessage } from '@/lib/auth-errors'
+import { cognitoForgotPasswordService } from '@/lib/forgot-password'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,8 +29,8 @@ export function ForgotPasswordPage() {
       setStage('reset')
     } catch (err) {
       setError(
-        err instanceof ForgotPasswordError
-          ? forgotPasswordErrorMessage(err.kind)
+        err instanceof AuthFlowError
+          ? authFlowErrorMessage(err.kind)
           : 'Unable to request a reset.',
       )
       setIsSubmitting(false)
@@ -53,8 +50,8 @@ export function ForgotPasswordPage() {
       await signIn(email, newPassword)
     } catch (err) {
       setError(
-        err instanceof ForgotPasswordError
-          ? forgotPasswordErrorMessage(err.kind)
+        err instanceof AuthFlowError
+          ? authFlowErrorMessage(err.kind)
           : 'Please sign in with your new password.',
       )
       setIsSubmitting(false)
