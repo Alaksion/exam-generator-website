@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AuthContext } from '@/lib/auth'
 import { cognitoClient, type CognitoClient } from '@/lib/cognito'
+import {
+  cognitoSocialSignInService,
+  type SocialSignInService,
+} from '@/lib/social-signin'
 import { getMe } from '@/lib/me'
 import {
   clearSession,
@@ -20,9 +24,11 @@ function hasStoredSession(): boolean {
 export function AuthProvider({
   children,
   client = cognitoClient,
+  social = cognitoSocialSignInService,
 }: {
   children: React.ReactNode
   client?: CognitoClient
+  social?: SocialSignInService
 }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => hasStoredSession())
   const [user, setUser] = useState<Me | null>(null)
@@ -69,6 +75,11 @@ export function AuthProvider({
     [client],
   )
 
+  const signInWithSocial = useCallback(async () => {
+    await social.complete()
+    setIsAuthenticated(true)
+  }, [social])
+
   useEffect(() => {
     const handler = () => signOut()
     window.addEventListener('api:unauthorized', handler)
@@ -91,8 +102,8 @@ export function AuthProvider({
   }, [client])
 
   const value = useMemo(
-    () => ({ isAuthenticated, user, signIn, signOut }),
-    [isAuthenticated, user, signIn, signOut],
+    () => ({ isAuthenticated, user, signIn, signInWithSocial, signOut }),
+    [isAuthenticated, user, signIn, signInWithSocial, signOut],
   )
 
   return <AuthContext value={value}>{children}</AuthContext>

@@ -5,6 +5,7 @@ import {
   signIn as amplifySignIn,
   type AuthSession,
 } from 'aws-amplify/auth'
+import { getAuthConfig, isProviderEnabled } from './auth-config'
 
 export interface CognitoTokens {
   idToken: string
@@ -19,16 +20,34 @@ export interface CognitoClient {
 
 let configured = false
 
-function ensureConfigured(): void {
+export function ensureConfigured(): void {
   if (configured) return
   const poolId = import.meta.env.VITE_USER_POOL_ID as string | undefined
   const clientId = import.meta.env.VITE_USER_POOL_CLIENT_ID as string | undefined
+  const config = getAuthConfig()
+  const { userPoolDomain, redirectUri } = config
   if (poolId && clientId) {
+    const providers = (['Google', 'Apple'] as const).filter((p) =>
+      isProviderEnabled(config, p),
+    )
     Amplify.configure({
       Auth: {
         Cognito: {
           userPoolId: poolId,
           userPoolClientId: clientId,
+          loginWith:
+            userPoolDomain && redirectUri
+              ? {
+                  oauth: {
+                    domain: userPoolDomain,
+                    scopes: ['email', 'openid', 'profile'],
+                    redirectSignIn: [redirectUri],
+                    redirectSignOut: [redirectUri],
+                    responseType: 'code',
+                    providers,
+                  },
+                }
+              : undefined,
         },
       },
     })
@@ -36,7 +55,7 @@ function ensureConfigured(): void {
   configured = true
 }
 
-function toCognitoTokens(tokens: AuthSession['tokens']): CognitoTokens {
+export function toCognitoTokens(tokens: AuthSession['tokens']): CognitoTokens {
   const t = tokens as {
     idToken?: { toString(): string }
     accessToken?: { toString(): string }

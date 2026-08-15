@@ -5,6 +5,7 @@ export interface AuthContextValue {
   isAuthenticated: boolean
   user: Me | null
   signIn: (email: string, password: string) => Promise<void>
+  signInWithSocial: () => Promise<void>
   signOut: () => void
 }
 
