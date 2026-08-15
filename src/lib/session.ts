@@ -62,6 +62,24 @@ export function clearSession(): void {
   notify()
 }
 
+export type SessionRefresher = () => Promise<boolean>
+
+let refresher: SessionRefresher | null = null
+
+export function registerSessionRefresher(fn: SessionRefresher | null): void {
+  refresher = fn
+}
+
+/** Refresh the session once. Returns true on success, false on failure. */
+export async function refreshSession(): Promise<boolean> {
+  if (!refresher) return false
+  try {
+    return await refresher()
+  } catch {
+    return false
+  }
+}
+
 export function subscribeSession(listener: Listener): () => void {
   listeners.add(listener)
   return () => {

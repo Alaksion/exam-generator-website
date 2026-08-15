@@ -1,4 +1,4 @@
-import { getBearerToken } from '@/lib/session'
+import { getBearerToken, refreshSession } from '@/lib/session'
 
 export interface ApiError {
   error: string
@@ -20,10 +20,11 @@ export class ApiRequestError extends Error {
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
-export async function apiRequest<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
+interface AttemptOptions extends RequestInit {
+  retryOn401?: boolean
+}
+
+async function attempt<T>(path: string, options: AttemptOptions = {}): Promise<T> {
   const token = getBearerToken()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -43,6 +44,9 @@ export async function apiRequest<T>(
 
   if (!res.ok) {
     if (res.status === 401) {
+      if (options.retryOn401 && (await refreshSession())) {
+        return attempt<T>(path, { ...options, retryOn401: false })
+      }
       window.dispatchEvent(new CustomEvent('api:unauthorized'))
     }
 
@@ -65,6 +69,13 @@ export async function apiRequest<T>(
   }
 
   return res.json() as Promise<T>
+}
+
+export async function apiRequest<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  return attempt<T>(path, { ...options, retryOn401: true })
 }
 
 export const api = {

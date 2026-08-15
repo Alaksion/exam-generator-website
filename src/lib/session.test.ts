@@ -4,14 +4,22 @@ import {
   getBearerToken,
   getSession,
   getStoredRefreshToken,
+  refreshSession,
+  registerSessionRefresher,
   saveIdAccess,
   saveSession,
   subscribeSession,
 } from '@/lib/session'
 
 describe('session store', () => {
-  beforeEach(() => clearSession())
-  afterEach(() => clearSession())
+  beforeEach(() => {
+    clearSession()
+    registerSessionRefresher(null)
+  })
+  afterEach(() => {
+    clearSession()
+    registerSessionRefresher(null)
+  })
 
   it('is empty by default', () => {
     expect(getSession()).toEqual({
@@ -57,5 +65,19 @@ describe('session store', () => {
     saveIdAccess({ idToken: 'x', accessToken: 'y' })
 
     expect(seen).toEqual(['change', 'change'])
+  })
+
+  it('refreshSession returns false when no refresher is registered', async () => {
+    expect(await refreshSession()).toBe(false)
+  })
+
+  it('refreshSession invokes the registered refresher and returns its result', async () => {
+    registerSessionRefresher(() => Promise.resolve(true))
+    expect(await refreshSession()).toBe(true)
+  })
+
+  it('refreshSession returns false when the refresher throws', async () => {
+    registerSessionRefresher(() => Promise.reject(new Error('boom')))
+    expect(await refreshSession()).toBe(false)
   })
 })

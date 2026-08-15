@@ -5,6 +5,8 @@ import { getMe } from '@/lib/me'
 import {
   clearSession,
   getStoredRefreshToken,
+  refreshSession,
+  registerSessionRefresher,
   saveIdAccess,
   saveSession,
 } from '@/lib/session'
@@ -30,10 +32,8 @@ export function AuthProvider({
 
     const restore = async () => {
       try {
-        const refreshToken = getStoredRefreshToken()
-        if (refreshToken) {
-          const refreshed = await client.refresh(refreshToken)
-          saveIdAccess(refreshed)
+        if (getStoredRefreshToken() && !(await refreshSession())) {
+          throw new Error('session refresh failed')
         }
         const me = await getMe()
         if (!cancelled) setUser(me)
@@ -49,7 +49,7 @@ export function AuthProvider({
     return () => {
       cancelled = true
     }
-  }, [isAuthenticated, client])
+  }, [isAuthenticated])
 
   const signOut = useCallback(() => {
     clearSession()
@@ -73,6 +73,21 @@ export function AuthProvider({
     window.addEventListener('api:unauthorized', handler)
     return () => window.removeEventListener('api:unauthorized', handler)
   }, [signOut])
+
+  useEffect(() => {
+    registerSessionRefresher(async () => {
+      const refreshToken = getStoredRefreshToken()
+      if (!refreshToken) return false
+      try {
+        const tokens = await client.refresh(refreshToken)
+        saveIdAccess(tokens)
+        return true
+      } catch {
+        return false
+      }
+    })
+    return () => registerSessionRefresher(null)
+  }, [client])
 
   const value = useMemo(
     () => ({ isAuthenticated, user, signIn, signOut }),
