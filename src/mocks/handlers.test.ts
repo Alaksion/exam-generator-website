@@ -64,6 +64,18 @@ describe('me mock - identity resolution', () => {
     }>(res)
     expect(me).toMatchObject({ email: 'admin@exam.io', role: 'admin' })
   })
+
+  it('resolves a customer sub to a customer role', async () => {
+    const res = await fetch('/v1/me', {
+      headers: {
+        Authorization:
+          'Bearer u0000000-0000-0000-0000-000000000002',
+      },
+    })
+    expect(res.status).toBe(200)
+    const me = await parse<{ role: string }>(res)
+    expect(me.role).toBe('customer')
+  })
 })
 
 describe('certifications mock - topic context contract', () => {
