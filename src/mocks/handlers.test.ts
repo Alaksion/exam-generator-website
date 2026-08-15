@@ -78,6 +78,57 @@ describe('me mock - identity resolution', () => {
   })
 })
 
+const ADMIN = 'Bearer u0000000-0000-0000-0000-000000000001'
+const CUSTOMER = 'Bearer u0000000-0000-0000-0000-000000000002'
+
+describe('exams mock - per-user ownership', () => {
+  it('scopes the exam list to the caller and hides other users exams', async () => {
+    const createdByAdmin = await fetch('/v1/exams', {
+      method: 'POST',
+      headers: { Authorization: ADMIN },
+      body: JSON.stringify({ certificationId: 'c0000000-0000-0000-0000-000000000001' }),
+    })
+    expect(createdByAdmin.status).toBe(201)
+    const { id } = await parse<{ id: string }>(createdByAdmin)
+
+    const customerList = await fetch('/v1/exams', {
+      headers: { Authorization: CUSTOMER },
+    })
+    const customerPage = await parse<{ items: Array<{ id: string }> }>(customerList)
+    expect(customerPage.items.map((e) => e.id)).not.toContain(id)
+  })
+
+  it('returns a 403 when deleting an exam the caller does not own', async () => {
+    const createdByAdmin = await fetch('/v1/exams', {
+      method: 'POST',
+      headers: { Authorization: ADMIN },
+      body: JSON.stringify({ certificationId: 'c0000000-0000-0000-0000-000000000001' }),
+    })
+    const { id } = await parse<{ id: string }>(createdByAdmin)
+
+    const res = await fetch(`/v1/exams/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: CUSTOMER },
+    })
+    expect(res.status).toBe(403)
+  })
+
+  it('deletes an exam the caller owns', async () => {
+    const createdByCustomer = await fetch('/v1/exams', {
+      method: 'POST',
+      headers: { Authorization: CUSTOMER },
+      body: JSON.stringify({ certificationId: 'c0000000-0000-0000-0000-000000000001' }),
+    })
+    const { id } = await parse<{ id: string }>(createdByCustomer)
+
+    const res = await fetch(`/v1/exams/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: CUSTOMER },
+    })
+    expect(res.status).toBe(204)
+  })
+})
+
 describe('certifications mock - topic context contract', () => {
   it('seeds the catalog with topics that all carry at least 20-char context', async () => {
     const res = await fetch('/v1/certifications')

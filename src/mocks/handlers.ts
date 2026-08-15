@@ -74,6 +74,7 @@ interface Question {
 
 interface Exam {
   id: string
+  ownerId: string
   certificationId: string
   provider: Provider
   title: string
@@ -443,9 +444,17 @@ export const handlers = [
         { status: 404 },
       )
     }
+    const ownerId = tokenToSub(request)
+    if (!ownerId) {
+      return HttpResponse.json(
+        { error: 'Unauthorized', message: 'Missing or invalid bearer token.' },
+        { status: 401 },
+      )
+    }
     const now = new Date().toISOString()
     const exam: Exam = {
       id: uuid(),
+      ownerId,
       certificationId: cert.id,
       provider: cert.provider,
       title: `${cert.name} - Practice Exam ${now}`,
@@ -467,8 +476,11 @@ export const handlers = [
     const provider = url.searchParams.get('provider')
     const certificationId = url.searchParams.get('certificationId')
     const limit = Number(url.searchParams.get('limit') ?? '20')
+    const ownerId = tokenToSub(request)
 
-    let items = exams.filter((e) => e.status === status)
+    let items = exams.filter(
+      (e) => e.ownerId === ownerId && e.status === status,
+    )
     if (provider) items = items.filter((e) => e.provider === provider)
     if (certificationId) {
       items = items.filter((e) => e.certificationId === certificationId)
@@ -534,12 +546,19 @@ export const handlers = [
     })
   }),
 
-  http.delete('/v1/exams/:id', ({ params }) => {
-    const index = exams.findIndex((e) => e.id === params.id)
-    if (index === -1) {
+  http.delete('/v1/exams/:id', ({ request, params }) => {
+    const exam = exams.find((e) => e.id === params.id)
+    if (!exam) {
       return HttpResponse.json({ error: 'NotFound', message: 'Exam not found.' }, { status: 404 })
     }
-    exams.splice(index, 1)
+    const ownerId = tokenToSub(request)
+    if (ownerId !== exam.ownerId) {
+      return HttpResponse.json(
+        { error: 'Forbidden', message: 'You do not own this exam.' },
+        { status: 403 },
+      )
+    }
+    exams.splice(exams.indexOf(exam), 1)
     return new HttpResponse(null, { status: 204 })
   }),
 ]

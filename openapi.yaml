@@ -259,10 +259,11 @@ paths:
       tags: [Exams]
       summary: List exams
       description: |
-        Lists exams, newest first, filtered by status (default `READY`).
-        Paginated with an opaque base64 cursor. When `certificationId` is
-        provided, results are scoped to that certification (status filter
-        still applies).
+        Lists the caller's own exams, newest first, filtered by status (default
+        `READY`). Scoped server-side to the bearer token's `sub` — a caller only
+        ever sees exams they own. Paginated with an opaque base64 cursor. When
+        `certificationId` is provided, results are scoped to that certification
+        (status filter still applies).
       operationId: listExams
       parameters:
         - name: status
@@ -350,12 +351,15 @@ paths:
       summary: Delete an exam
       description: |
         Permanently removes the exam's DynamoDB row and its S3 artifacts
-        (canonical JSON and PDF).
+        (canonical JSON and PDF). The caller must own the exam; deleting another
+        user's exam returns `403`.
       operationId: deleteExam
       responses:
         '204':
           description: Exam deleted.
           content: {}
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':

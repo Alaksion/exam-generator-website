@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useDeleteExam, useExamDownload, useExams } from '@/hooks/use-exams'
+import { ApiRequestError } from '@/lib/api'
 import { NetworkErrorBlock } from '@/components/NetworkErrorBlock'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -65,8 +66,13 @@ export function HistoryPage() {
         toast.success('Exam deleted')
         setPendingDelete(null)
       },
-      onError: () => {
-        toast.error('Unable to delete the exam.')
+      onError: (err) => {
+        const isForbidden = err instanceof ApiRequestError && err.status === 403
+        toast.error(
+          isForbidden
+            ? 'You can only delete your own exams.'
+            : 'Unable to delete the exam.',
+        )
       },
     })
   }
