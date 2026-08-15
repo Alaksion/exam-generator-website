@@ -43,6 +43,29 @@ async function parse<T = unknown>(res: Response): Promise<T> {
   return res.json() as Promise<T>
 }
 
+describe('me mock - identity resolution', () => {
+  it('returns 401 without a bearer token', async () => {
+    const res = await fetch('/v1/me')
+    expect(res.status).toBe(401)
+  })
+
+  it('resolves a known sub to its profile', async () => {
+    const res = await fetch('/v1/me', {
+      headers: {
+        Authorization:
+          'Bearer u0000000-0000-0000-0000-000000000001',
+      },
+    })
+    expect(res.status).toBe(200)
+    const me = await parse<{
+      sub: string
+      email: string
+      role: string
+    }>(res)
+    expect(me).toMatchObject({ email: 'admin@exam.io', role: 'admin' })
+  })
+})
+
 describe('certifications mock - topic context contract', () => {
   it('seeds the catalog with topics that all carry at least 20-char context', async () => {
     const res = await fetch('/v1/certifications')

@@ -87,6 +87,40 @@ interface Exam {
 
 const uuid = () => crypto.randomUUID()
 
+interface MockUser {
+  sub: string
+  email: string
+  role: 'customer' | 'admin'
+  createdAt: string
+}
+
+const users: MockUser[] = [
+  {
+    sub: 'u0000000-0000-0000-0000-000000000001',
+    email: 'admin@exam.io',
+    role: 'admin',
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    sub: 'u0000000-0000-0000-0000-000000000002',
+    email: 'customer@exam.io',
+    role: 'customer',
+    createdAt: '2024-01-02T00:00:00.000Z',
+  },
+]
+
+function tokenToSub(request: Request): string | null {
+  const auth = request.headers.get('Authorization')
+  if (!auth?.startsWith('Bearer ')) return null
+  return auth.slice('Bearer '.length)
+}
+
+function resolveUser(request: Request): MockUser | null {
+  const sub = tokenToSub(request)
+  if (!sub) return null
+  return users.find((u) => u.sub === sub) ?? null
+}
+
 const providers: Provider[] = ['aws', 'azure', 'gcp']
 const difficulties: Difficulty[] = ['easy', 'medium', 'hard']
 
@@ -315,6 +349,17 @@ function completeExam(exam: Exam): void {
 
 export const handlers = [
   http.get('/v1/health', () => HttpResponse.json({ status: 'ok' })),
+
+  http.get('/v1/me', ({ request }) => {
+    const user = resolveUser(request)
+    if (!user) {
+      return HttpResponse.json(
+        { error: 'Unauthorized', message: 'Missing or invalid bearer token.' },
+        { status: 401 },
+      )
+    }
+    return HttpResponse.json(user)
+  }),
 
   http.get('/v1/certifications', () =>
     HttpResponse.json({ items: certifications }),
