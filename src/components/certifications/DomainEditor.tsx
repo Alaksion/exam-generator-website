@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,7 +29,19 @@ export function DomainEditor({
   onUpdate,
   onRemove,
 }: DomainEditorProps) {
+  const [touched, setTouched] = useState<(string | null)[]>(() =>
+    domain.topics.map(() => null),
+  )
+
   function updateTopic(topicIndex: number, value: Topic) {
+    if (value.context !== domain.topics[topicIndex].context) {
+      setTouched((prev) =>
+        Array.from(
+          { length: Math.max(prev.length, topicIndex + 1) },
+          (_, i) => (i === topicIndex ? value.context : (prev[i] ?? null)),
+        ),
+      )
+    }
     onUpdate({
       ...domain,
       topics: domain.topics.map((t, i) => (i === topicIndex ? value : t)),
@@ -82,6 +95,10 @@ export function DomainEditor({
           {domain.topics.map((topic, topicIndex) => {
             const contextLength = topic.context.trim().length
             const contextError = contextErrorFor(topic)
+            const isTouched =
+              touched[topicIndex] != null &&
+              touched[topicIndex] === topic.context
+            const showContextError = isTouched ? contextError : null
             return (
               <div
                 key={topicIndex}
@@ -121,7 +138,7 @@ export function DomainEditor({
                     aria-label={`Topic ${topicIndex + 1} context`}
                     placeholder="Describe what this topic covers (20–1500 characters)"
                     value={topic.context}
-                    aria-invalid={Boolean(contextError)}
+                    aria-invalid={Boolean(showContextError)}
                     onChange={(e) =>
                       updateTopic(topicIndex, {
                         ...topic,
@@ -130,7 +147,7 @@ export function DomainEditor({
                     }
                   />
                   <div className="flex items-center justify-between gap-2">
-                    <FieldError errors={contextError ? [{ message: contextError }] : []} />
+                    <FieldError errors={showContextError ? [{ message: showContextError }] : []} />
                     <span className="ml-auto shrink-0 text-xs text-muted-foreground tabular-nums">
                       {contextLength}/{TOPIC_CONTEXT_MAX_LENGTH}
                     </span>

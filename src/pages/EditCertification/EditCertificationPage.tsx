@@ -5,30 +5,8 @@ import { toastOn400 } from '@/lib/error-toast'
 import { CertificationForm } from '@/components/certifications/CertificationForm'
 import { NetworkErrorBlock } from '@/components/NetworkErrorBlock'
 import { useCertification, useUpdateCertification } from '@/hooks/use-certifications'
+import { toFormValues } from '@/lib/certification-form-values'
 import type { CreateFormValues } from '@/lib/certification-schema'
-import type { Certification } from '@/lib/types'
-
-function toFormValues(cert: Certification): CreateFormValues {
-  return {
-    provider: cert.provider,
-    code: cert.code,
-    name: cert.name,
-    description: cert.description,
-    isActive: cert.isActive,
-    config: {
-      questionCount: cert.config.questionCount,
-      difficultyDistribution: cert.config.difficultyDistribution,
-      domains: cert.config.domains.map((domain) => ({
-        name: domain.name,
-        weight: domain.weight,
-        topics: domain.topics.map((topic) => ({
-          name: topic.name,
-          context: topic.context,
-        })),
-      })),
-    },
-  }
-}
 
 export function EditCertificationPage() {
   const { id } = useParams()

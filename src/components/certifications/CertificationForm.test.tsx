@@ -25,6 +25,22 @@ const baseValues: CreateFormValues = {
   },
 }
 
+function withTopicContext(context: string): CreateFormValues {
+  return {
+    ...baseValues,
+    config: {
+      ...baseValues.config,
+      domains: [
+        {
+          name: 'Cloud Concepts',
+          weight: 100,
+          topics: [{ name: 'Cloud Value Proposition', context }],
+        },
+      ],
+    },
+  }
+}
+
 describe('CertificationForm', () => {
   it('hides provider and code fields in edit mode', () => {
     render(
@@ -73,6 +89,32 @@ describe('CertificationForm', () => {
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining(baseValues))
   })
 
+  it('does not flag the fresh topic context on a blank create form', () => {
+    render(<CertificationForm onSubmit={() => undefined} />)
+
+    expect(
+      screen.queryByText('Topic context must be at least 20 characters'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Topic 1 context')).toHaveValue('')
+  })
+
+  it('does not flag a newly added topic until its context is edited', async () => {
+    const user = userEvent.setup()
+    render(<CertificationForm onSubmit={() => undefined} />)
+
+    await user.click(screen.getByRole('button', { name: 'Add topic' }))
+
+    expect(
+      screen.queryByText('Topic context must be at least 20 characters'),
+    ).not.toBeInTheDocument()
+
+    await user.type(screen.getByLabelText('Topic 2 context'), 'a')
+
+    expect(
+      screen.getByText('Topic context must be at least 20 characters'),
+    ).toBeInTheDocument()
+  })
+
   it('shows a trimmed character counter for each topic context', () => {
     const padded = `  ${VALID_CONTEXT}  `
     render(
@@ -99,29 +141,59 @@ describe('CertificationForm', () => {
     ).toBeInTheDocument()
   })
 
-  it('flags an out-of-range topic context and blocks submission', () => {
+  it('does not flag a too-short topic context on initial render', () => {
     render(
       <CertificationForm
-        initialValues={{
-          ...baseValues,
-          config: {
-            ...baseValues.config,
-            domains: [
-              {
-                name: 'Cloud Concepts',
-                weight: 100,
-                topics: [{ name: 'Cloud Value Proposition', context: 'Short' }],
-              },
-            ],
-          },
-        }}
+        initialValues={withTopicContext('Short')}
         onSubmit={() => undefined}
       />,
     )
 
     expect(
+      screen.queryByText('Topic context must be at least 20 characters'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByLabelText('Topic 1 context'),
+    ).not.toHaveAttribute('aria-invalid', 'true')
+    expect(
+      screen.getByRole('button', { name: 'Save changes' }),
+    ).toBeDisabled()
+  })
+
+  it('does not flag an empty topic context on initial render', () => {
+    render(
+      <CertificationForm
+        initialValues={withTopicContext('')}
+        onSubmit={() => undefined}
+      />,
+    )
+
+    expect(
+      screen.queryByText('Topic context must be at least 20 characters'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Topic 1 context')).toHaveValue('')
+    expect(
+      screen.getByRole('button', { name: 'Save changes' }),
+    ).toBeDisabled()
+  })
+
+  it('flags a too-short topic context once the user edits the field', async () => {
+    const user = userEvent.setup()
+    render(
+      <CertificationForm
+        initialValues={withTopicContext('Short')}
+        onSubmit={() => undefined}
+      />,
+    )
+
+    await user.type(screen.getByLabelText('Topic 1 context'), 'a')
+
+    expect(
       screen.getByText('Topic context must be at least 20 characters'),
     ).toBeInTheDocument()
+    expect(
+      screen.getByLabelText('Topic 1 context'),
+    ).toHaveAttribute('aria-invalid', 'true')
     expect(
       screen.getByRole('button', { name: 'Save changes' }),
     ).toBeDisabled()
