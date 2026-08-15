@@ -1,6 +1,14 @@
 export type Provider = 'aws' | 'azure' | 'gcp'
 export type Difficulty = 'easy' | 'medium' | 'hard'
 export type ExamStatus = 'GENERATING' | 'READY' | 'FAILED'
+export type Role = 'customer' | 'admin'
+
+export interface Me {
+  sub: string
+  email: string
+  role: Role
+  createdAt: string
+}
 
 export interface AnswerOption {
   id: string
