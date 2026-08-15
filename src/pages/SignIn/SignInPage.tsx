@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { getAuthConfig } from '@/lib/auth-config'
+import { cognitoSocialSignInService } from '@/lib/social-signin'
 import { cn } from '@/lib/utils'
 
 export function SignInPage() {
@@ -16,6 +17,15 @@ export function SignInPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSocial = async (provider: 'Google' | 'Apple') => {
+    setError(null)
+    try {
+      await cognitoSocialSignInService.start(provider)
+    } catch {
+      setError('Unable to start sign in with that provider. Please try again.')
+    }
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -109,12 +119,20 @@ export function SignInPage() {
 
           <div className="mb-4 grid grid-cols-2 gap-2">
             {googleEnabled && (
-              <Button type="button" variant="outline">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleSocial('Google')}
+              >
                 Continue with Google
               </Button>
             )}
             {appleEnabled && (
-              <Button type="button" variant="outline">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleSocial('Apple')}
+              >
                 Continue with Apple
               </Button>
             )}

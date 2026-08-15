@@ -2,6 +2,8 @@ import { Route, Routes, Navigate } from "react-router-dom";
 import { SignInPage } from "@/pages/SignIn/SignInPage";
 import { SignUpPage } from "@/pages/SignUp/SignUpPage";
 import { ForgotPasswordPage } from "@/pages/ForgotPassword/ForgotPasswordPage";
+import { AuthCallbackPage } from "@/pages/AuthCallback/AuthCallbackPage";
+import { getAuthConfig } from "@/lib/auth-config";
 import { useAuth } from "@/lib/auth";
 import { UiShell } from "@/components/UiShell";
 import { CatalogPage } from "@/pages/Catalog/CatalogPage";
@@ -60,12 +62,14 @@ function AuthenticatedApp() {
 }
 
 function AuthApp() {
+  const { callbackPath } = getAuthConfig();
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <Routes>
         <Route index element={<SignInPage />} />
         <Route path="sign-up" element={<SignUpPage />} />
         <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path={callbackPath} element={<AuthCallbackPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
