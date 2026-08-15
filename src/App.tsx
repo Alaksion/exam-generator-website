@@ -1,5 +1,5 @@
 import { Route, Routes, Navigate } from "react-router-dom";
-import { SignInScreen } from "@/components/SignInScreen";
+import { SignInPage } from "@/pages/SignIn/SignInPage";
 import { useAuth } from "@/lib/auth";
 import { UiShell } from "@/components/UiShell";
 import { CatalogPage } from "@/pages/Catalog/CatalogPage";
@@ -61,7 +61,7 @@ function App() {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return <SignInScreen />;
+    return <SignInPage />;
   }
 
   return <AuthenticatedApp />;
