@@ -3,7 +3,7 @@ import {
   clearSession,
   getBearerToken,
   getSession,
-  getStoredRefreshToken,
+  hasStoredSession,
   refreshSession,
   registerSessionRefresher,
   saveIdAccess,
@@ -22,44 +22,36 @@ describe('session store', () => {
   })
 
   it('is empty by default', () => {
-    expect(getSession()).toEqual({
-      idToken: null,
-      accessToken: null,
-      refreshToken: null,
-    })
+    expect(getSession()).toEqual({ idToken: null, accessToken: null })
     expect(getBearerToken()).toBeNull()
+    expect(hasStoredSession()).toBe(false)
   })
 
-  it('saves a full token set in memory and persists the refresh token', () => {
-    saveSession({ idToken: 'i', accessToken: 'a', refreshToken: 'r' })
+  it('saves the id and access tokens in memory and marks a stored session', () => {
+    saveSession({ idToken: 'i', accessToken: 'a' })
 
-    expect(getSession()).toEqual({
-      idToken: 'i',
-      accessToken: 'a',
-      refreshToken: 'r',
-    })
+    expect(getSession()).toEqual({ idToken: 'i', accessToken: 'a' })
     expect(getBearerToken()).toBe('i')
-    expect(sessionStorage.getItem('mock-exams.refreshToken')).toBe('r')
+    expect(hasStoredSession()).toBe(true)
   })
 
-  it('rehydrates the in-memory refresh token from sessionStorage', () => {
-    sessionStorage.setItem('mock-exams.refreshToken', 'persisted-refresh')
-    expect(getStoredRefreshToken()).toBe('persisted-refresh')
-    expect(getSession().refreshToken).toBe('persisted-refresh')
+  it('treats a persisted marker as a stored session', () => {
+    sessionStorage.setItem('mock-exams.session', '1')
+    expect(hasStoredSession()).toBe(true)
   })
 
-  it('clears memory and sessionStorage on clearSession', () => {
-    saveSession({ idToken: 'i', accessToken: 'a', refreshToken: 'r' })
+  it('clears memory and the stored-session marker on clearSession', () => {
+    saveSession({ idToken: 'i', accessToken: 'a' })
     clearSession()
     expect(getSession().idToken).toBeNull()
-    expect(sessionStorage.getItem('mock-exams.refreshToken')).toBeNull()
+    expect(hasStoredSession()).toBe(false)
   })
 
   it('notifies subscribers on save and clear', () => {
     const seen: string[] = []
     const unsubscribe = subscribeSession(() => seen.push('change'))
 
-    saveSession({ idToken: 'i', accessToken: 'a', refreshToken: 'r' })
+    saveSession({ idToken: 'i', accessToken: 'a' })
     clearSession()
     unsubscribe()
     saveIdAccess({ idToken: 'x', accessToken: 'y' })

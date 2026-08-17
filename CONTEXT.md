@@ -23,11 +23,11 @@ A User with the `admin` role, who additionally manages Certifications.
 _Avoid_: Moderator, superuser, manager.
 
 **Session**:
-The User's signed-in state, carried as a Cognito ID token sent as a `Bearer` header. The `ID`/`Access` tokens live only in memory; the `RefreshToken` is persisted in `sessionStorage` so a reload can restore the Session. The app treats it as live while `/v1/me` succeeds; on `401` it refreshes then re-tries, and on failure forces a re-login.
+The User's signed-in state, carried as a Cognito ID token sent as a `Bearer` header. The `ID`/`Access` tokens live only in memory; Amplify v6 owns token refresh from its own persisted storage, so a reload restores the ID/Access tokens via `fetchAuthSession({ forceRefresh })`, and a `sessionStorage` marker records that a session existed. The app treats the Session as live while `/v1/me` succeeds; on `401` it refreshes then re-tries, and on failure forces a re-login.
 _Avoid_: Login state, auth, session token.
 
 **Sign out**:
-The action that ends the User's Session: it clears the in-memory and `sessionStorage` tokens and returns the User to the login screen. Local only — it does not call a Cognito global-signout endpoint in this MVP.
+The action that ends the User's Session: it clears the in-memory tokens and the `sessionStorage` marker and returns the User to the login screen. Local only — it does not call a Cognito global-signout endpoint in this MVP.
 _Avoid_: Log out, logout, disconnect.
 
 **Certification**:
