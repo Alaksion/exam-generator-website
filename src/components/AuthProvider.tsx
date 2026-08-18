@@ -9,17 +9,13 @@ import { getMe } from '@/lib/me'
 import {
   clearSession,
   getBearerToken,
-  getStoredRefreshToken,
+  hasStoredSession,
   refreshSession,
   registerSessionRefresher,
   saveIdAccess,
   saveSession,
 } from '@/lib/session'
 import type { Me } from '@/lib/types'
-
-function hasStoredSession(): boolean {
-  return getStoredRefreshToken() !== null
-}
 
 export function AuthProvider({
   children,
@@ -33,14 +29,31 @@ export function AuthProvider({
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => hasStoredSession())
   const [user, setUser] = useState<Me | null>(null)
 
+  // Register the refresher before the identity effect so a reload can refresh
+  // the session instead of failing because no refresher exists yet.
+  useEffect(() => {
+    registerSessionRefresher(async () => {
+      // Amplify owns the refresh token and refreshes internally on
+      // fetchAuthSession({ forceRefresh }); we just surface the new tokens.
+      try {
+        const tokens = await client.refresh()
+        saveIdAccess(tokens)
+        return true
+      } catch {
+        return false
+      }
+    })
+    return () => registerSessionRefresher(null)
+  }, [client])
+
   useEffect(() => {
     if (!isAuthenticated) return
     let cancelled = false
 
     const resolveIdentity = async () => {
       try {
-        // A fresh login already holds an id token; only a reload needs the
-        // stored refresh token to be exchanged before calling /v1/me.
+        // A fresh login already holds an id token; only a reload needs a
+        // session refresh (Amplify's own storage) before calling /v1/me.
         if (!getBearerToken() && hasStoredSession() && !(await refreshSession())) {
           throw new Error('session refresh failed')
         }
@@ -85,21 +98,6 @@ export function AuthProvider({
     window.addEventListener('api:unauthorized', handler)
     return () => window.removeEventListener('api:unauthorized', handler)
   }, [signOut])
-
-  useEffect(() => {
-    registerSessionRefresher(async () => {
-      const refreshToken = getStoredRefreshToken()
-      if (!refreshToken) return false
-      try {
-        const tokens = await client.refresh(refreshToken)
-        saveIdAccess(tokens)
-        return true
-      } catch {
-        return false
-      }
-    })
-    return () => registerSessionRefresher(null)
-  }, [client])
 
   const value = useMemo(
     () => ({ isAuthenticated, user, signIn, signInWithSocial, signOut }),

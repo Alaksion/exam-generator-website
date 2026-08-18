@@ -1,10 +1,9 @@
 import type { CognitoTokens } from '@/lib/cognito'
 
-const REFRESH_KEY = 'mock-exams.refreshToken'
+const SESSION_KEY = 'mock-exams.session'
 
 let idToken: string | null = null
 let accessToken: string | null = null
-let refreshToken: string | null = null
 
 type Listener = () => void
 const listeners = new Set<Listener>()
@@ -18,47 +17,45 @@ function notify(): void {
 export interface SessionSnapshot {
   idToken: string | null
   accessToken: string | null
-  refreshToken: string | null
 }
 
-export function saveSession(tokens: CognitoTokens): void {
-  idToken = tokens.idToken
-  accessToken = tokens.accessToken
-  refreshToken = tokens.refreshToken
-  sessionStorage.setItem(REFRESH_KEY, tokens.refreshToken)
+function setTokens(id: string | null, access: string | null): void {
+  idToken = id
+  accessToken = access
+}
+
+export function saveSession(
+  tokens: Pick<CognitoTokens, 'idToken' | 'accessToken'>,
+): void {
+  setTokens(tokens.idToken, tokens.accessToken)
+  sessionStorage.setItem(SESSION_KEY, '1')
   notify()
 }
 
 export function saveIdAccess(
   tokens: Pick<CognitoTokens, 'idToken' | 'accessToken'>,
 ): void {
-  idToken = tokens.idToken
-  accessToken = tokens.accessToken
+  setTokens(tokens.idToken, tokens.accessToken)
   notify()
 }
 
 export function getSession(): SessionSnapshot {
-  return { idToken, accessToken, refreshToken }
+  return { idToken, accessToken }
 }
 
 export function getBearerToken(): string | null {
   return idToken
 }
 
-/** Rehydrate the in-memory tokens from a persisted refresh token, if any. */
-export function getStoredRefreshToken(): string | null {
-  const stored = sessionStorage.getItem(REFRESH_KEY)
-  if (stored) {
-    refreshToken = stored
-  }
-  return refreshToken
+/** True when a session was previously saved, so a reload can try to restore it. */
+export function hasStoredSession(): boolean {
+  return sessionStorage.getItem(SESSION_KEY) !== null
 }
 
 export function clearSession(): void {
   idToken = null
   accessToken = null
-  refreshToken = null
-  sessionStorage.removeItem(REFRESH_KEY)
+  sessionStorage.removeItem(SESSION_KEY)
   notify()
 }
 

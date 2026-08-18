@@ -18,10 +18,10 @@ vi.mock('./session', () => ({
 
 vi.mock('./cognito', () => ({
   ensureConfigured: () => {},
-  toCognitoTokens: (t: { idToken: unknown; accessToken: unknown; refreshToken: unknown }) => ({
+  toCognitoTokens: (t: { idToken: unknown; accessToken: unknown; refreshToken?: unknown }) => ({
     idToken: String(t.idToken),
     accessToken: String(t.accessToken),
-    refreshToken: String(t.refreshToken),
+    refreshToken: t.refreshToken ? String(t.refreshToken) : null,
   }),
 }))
 
@@ -50,13 +50,13 @@ describe('cognitoSocialSignInService', () => {
 
   it('saves the session from the completed OAuth exchange', async () => {
     mocks.fetchAuthSession.mockResolvedValue({
-      tokens: { idToken: token('id'), accessToken: token('acc'), refreshToken: token('ref') },
+      tokens: { idToken: token('id'), accessToken: token('acc') },
     })
     await cognitoSocialSignInService.complete()
     expect(mocks.saveSession).toHaveBeenCalledWith({
       idToken: 'id',
       accessToken: 'acc',
-      refreshToken: 'ref',
+      refreshToken: null,
     })
   })
 })

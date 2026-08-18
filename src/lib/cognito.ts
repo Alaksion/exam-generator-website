@@ -10,12 +10,13 @@ import { getAuthConfig, isProviderEnabled } from './auth-config'
 export interface CognitoTokens {
   idToken: string
   accessToken: string
-  refreshToken: string
+  /** null when the session did not carry a refresh token (amplify v6 sessions never do). */
+  refreshToken: string | null
 }
 
 export interface CognitoClient {
   signIn(username: string, password: string): Promise<CognitoTokens>
-  refresh(refreshToken: string): Promise<Pick<CognitoTokens, 'idToken' | 'accessToken'>>
+  refresh(): Promise<Pick<CognitoTokens, 'idToken' | 'accessToken'>>
 }
 
 let configured = false
@@ -61,13 +62,13 @@ export function toCognitoTokens(tokens: AuthSession['tokens']): CognitoTokens {
     accessToken?: { toString(): string }
     refreshToken?: { toString(): string }
   }
-  if (!t?.idToken || !t.accessToken || !t.refreshToken) {
-    throw new Error('Sign-in did not yield a full token set.')
+  if (!t?.idToken || !t.accessToken) {
+    throw new Error('Sign-in did not yield ID and access tokens.')
   }
   return {
     idToken: t.idToken.toString(),
     accessToken: t.accessToken.toString(),
-    refreshToken: t.refreshToken.toString(),
+    refreshToken: t.refreshToken ? t.refreshToken.toString() : null,
   }
 }
 
