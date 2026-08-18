@@ -46,6 +46,16 @@ export function AuthProvider({
     return () => registerSessionRefresher(null)
   }, [client])
 
+  const signOut = useCallback(async () => {
+    try {
+      await client.signOut()
+    } finally {
+      clearSession()
+      setIsAuthenticated(false)
+      setUser(null)
+    }
+  }, [client])
+
   useEffect(() => {
     if (!isAuthenticated) return
     let cancelled = false
@@ -60,10 +70,9 @@ export function AuthProvider({
         const me = await getMe()
         if (!cancelled) setUser(me)
       } catch {
-        if (!cancelled) {
-          clearSession()
-          setIsAuthenticated(false)
-        }
+        // Identity failed to resolve: tear down the Amplify session too, so a
+        // later sign-in is not rejected as "already signed in".
+        if (!cancelled) await signOut()
       }
     }
     resolveIdentity()
@@ -71,13 +80,7 @@ export function AuthProvider({
     return () => {
       cancelled = true
     }
-  }, [isAuthenticated])
-
-  const signOut = useCallback(() => {
-    clearSession()
-    setIsAuthenticated(false)
-    setUser(null)
-  }, [])
+  }, [isAuthenticated, signOut])
 
   const signIn = useCallback(
     async (email: string, password: string) => {
@@ -94,7 +97,7 @@ export function AuthProvider({
   }, [social])
 
   useEffect(() => {
-    const handler = () => signOut()
+    const handler = () => void signOut()
     window.addEventListener('api:unauthorized', handler)
     return () => window.removeEventListener('api:unauthorized', handler)
   }, [signOut])
