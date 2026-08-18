@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 
 export function UiShell() {
@@ -14,32 +14,32 @@ export function UiShell() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <a href="/" className="font-heading text-lg font-medium">
+          <Link to="/" className="font-heading text-lg font-medium">
             Mock Exams
-          </a>
+          </Link>
           <nav className="hidden items-center gap-1 md:flex" aria-label="Navigation">
-            <a
-              href="/"
+            <Link
+              to="/"
               aria-current={location.pathname === '/' ? 'page' : undefined}
               className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground"
             >
               Catalog
-            </a>
-            <a
-              href="/history"
+            </Link>
+            <Link
+              to="/history"
               aria-current={location.pathname.startsWith('/history') ? 'page' : undefined}
               className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground"
             >
               History
-            </a>
+            </Link>
             {isAdmin && (
-              <a
-                href="/manage/certifications"
+              <Link
+                to="/manage/certifications"
                 aria-current={location.pathname.startsWith('/manage') ? 'page' : undefined}
                 className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:text-foreground"
               >
                 Certifications
-              </a>
+              </Link>
             )}
             <button
               type="button"
@@ -62,21 +62,21 @@ export function UiShell() {
         </div>
         {menuOpen && (
           <nav className="border-t px-4 py-2 md:hidden" aria-label="Mobile navigation">
-            <a
-              href="/history"
+            <Link
+              to="/history"
               onClick={closeMenu}
               className="block rounded-md px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               History
-            </a>
+            </Link>
             {isAdmin && (
-              <a
-                href="/manage/certifications"
+              <Link
+                to="/manage/certifications"
                 onClick={closeMenu}
                 className="block rounded-md px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 Certifications
-              </a>
+              </Link>
             )}
             <button
               type="button"
