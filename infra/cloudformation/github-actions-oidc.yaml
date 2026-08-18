@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  GitHub Actions OIDC trust. Creates the OpenID Connect provider for
+  token.actions.githubusercontent.com and a deploy role the workflow assumes
+  via aws-actions/configure-aws-credentials. Scoped to a single repo/branch.
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Default: Alaksion
+  GitHubRepo:
+    Type: String
+    Default: exam-generator-website
+  Branch:
+    Type: String
+    Default: main
+    Description: Only this branch can assume the deploy role.
+  RoleName:
+    Type: String
+    Default: mock-exams-website-github-actions
+  ProjectName:
+    Type: String
+    Default: mock-exams-website
+    Description: >-
+      Prefix of the website bucket names created by static-site.yaml
+      (e.g. mock-exams-website-prod-website).
+
+Resources:
+  GitHubOIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+        - 1c58a3a8518e8759bf075b76b750d4f2df264fcd
+
+  GitHubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref RoleName
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/${Branch}"
+      Policies:
+        - PolicyName: DeployToWebsite
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: SyncBuildToBuckets
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource: !Sub "arn:aws:s3:::${ProjectName}-*-website"
+              - Sid: UploadAndDeleteObjects
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub "arn:aws:s3:::${ProjectName}-*-website/*"
+              - Sid: InvalidateCloudFront
+                Effect: Allow
+                Action: cloudfront:CreateInvalidation
+                Resource: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/*"
+              - Sid: ResolveStackOutputs
+                Effect: Allow
+                Action: cloudformation:DescribeStacks
+                Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${ProjectName}-*"
+
+Outputs:
+  OIDCProviderArn:
+    Description: ARN of the GitHub OIDC provider.
+    Value: !GetAtt GitHubOIDCProvider.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-OIDCProviderArn"
+  DeployRoleArn:
+    Description: ARN to set as the AWS_DEPLOY_ROLE_ARN repository secret.
+    Value: !GetAtt GitHubActionsRole.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-DeployRoleArn"
