@@ -3,6 +3,7 @@ import {
   fetchAuthSession,
   getCurrentUser,
   signIn as amplifySignIn,
+  signOut as amplifySignOut,
   type AuthSession,
 } from 'aws-amplify/auth'
 import { getAuthConfig, isProviderEnabled } from './auth-config'
@@ -17,6 +18,7 @@ export interface CognitoTokens {
 export interface CognitoClient {
   signIn(username: string, password: string): Promise<CognitoTokens>
   refresh(): Promise<Pick<CognitoTokens, 'idToken' | 'accessToken'>>
+  signOut(): Promise<void>
 }
 
 let configured = false
@@ -75,6 +77,7 @@ export function toCognitoTokens(tokens: AuthSession['tokens']): CognitoTokens {
 export const cognitoClient: CognitoClient = {
   async signIn(username, password) {
     ensureConfigured()
+    await signOutIfSessionExists()
     await amplifySignIn({ username, password })
     const session = await fetchAuthSession()
     return toCognitoTokens(session.tokens)
@@ -87,4 +90,23 @@ export const cognitoClient: CognitoClient = {
     const tokens = toCognitoTokens(session.tokens)
     return { idToken: tokens.idToken, accessToken: tokens.accessToken }
   },
+
+  async signOut() {
+    try {
+      ensureConfigured()
+      await amplifySignOut()
+    } catch {
+      // Tearing down the local session must never fail the sign-out flow.
+    }
+  },
+}
+
+/** A stale Cognito session makes `amplifySignIn` throw; clear it before a fresh login. */
+async function signOutIfSessionExists(): Promise<void> {
+  try {
+    await getCurrentUser()
+    await amplifySignOut()
+  } catch {
+    // No existing Cognito session — proceed straight to sign-in.
+  }
 }

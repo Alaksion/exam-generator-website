@@ -19,6 +19,7 @@ vi.mock('@/lib/cognito', () => ({
 const client = {
   signIn: vi.fn(),
   refresh: mocks.refresh,
+  signOut: vi.fn().mockResolvedValue(undefined),
 }
 
 const me: Me = {
@@ -71,5 +72,39 @@ describe('AuthProvider', () => {
     expect(mocks.refresh).not.toHaveBeenCalled()
     expect(mocks.getMe).not.toHaveBeenCalled()
     expect(screen.getByTestId('authed').textContent).toBe('false')
+  })
+
+  it('tears down the Amplify session and clears the marker when identity resolution fails', async () => {
+    sessionStorage.setItem('mock-exams.session', '1')
+    mocks.getMe.mockRejectedValue(new Error('401 from /v1/me'))
+
+    render(
+      <AuthProvider client={client as Parameters<typeof AuthProvider>[0]['client']}>
+        <Probe />
+      </AuthProvider>,
+    )
+
+    await waitFor(() => expect(client.signOut).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(screen.getByTestId('authed').textContent).toBe('false'))
+    expect(sessionStorage.getItem('mock-exams.session')).toBeNull()
+  })
+
+  it('signs out of Amplify and clears the session on api:unauthorized', async () => {
+    sessionStorage.setItem('mock-exams.session', '1')
+    mocks.getMe.mockResolvedValue(me)
+
+    render(
+      <AuthProvider client={client as Parameters<typeof AuthProvider>[0]['client']}>
+        <Probe />
+      </AuthProvider>,
+    )
+
+    await waitFor(() => expect(screen.getByTestId('authed').textContent).toBe('true'))
+
+    window.dispatchEvent(new Event('api:unauthorized'))
+
+    await waitFor(() => expect(client.signOut).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(screen.getByTestId('authed').textContent).toBe('false'))
+    expect(sessionStorage.getItem('mock-exams.session')).toBeNull()
   })
 })
