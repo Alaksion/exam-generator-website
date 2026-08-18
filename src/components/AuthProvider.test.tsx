@@ -42,12 +42,12 @@ function Probe() {
 describe('AuthProvider', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    sessionStorage.clear()
+    localStorage.clear()
     mocks.refresh.mockResolvedValue({ idToken: 'fresh-id', accessToken: 'fresh-acc' })
   })
 
   it('restores a session on reload by refreshing before resolving identity', async () => {
-    sessionStorage.setItem('mock-exams.session', '1')
+    localStorage.setItem('mock-exams.session', '1')
     mocks.getMe.mockResolvedValue(me)
 
     render(
@@ -75,7 +75,7 @@ describe('AuthProvider', () => {
   })
 
   it('tears down the Amplify session and clears the marker when identity resolution fails', async () => {
-    sessionStorage.setItem('mock-exams.session', '1')
+    localStorage.setItem('mock-exams.session', '1')
     mocks.getMe.mockRejectedValue(new Error('401 from /v1/me'))
 
     render(
@@ -86,11 +86,11 @@ describe('AuthProvider', () => {
 
     await waitFor(() => expect(client.signOut).toHaveBeenCalledTimes(1))
     await waitFor(() => expect(screen.getByTestId('authed').textContent).toBe('false'))
-    expect(sessionStorage.getItem('mock-exams.session')).toBeNull()
+    expect(localStorage.getItem('mock-exams.session')).toBeNull()
   })
 
   it('signs out of Amplify and clears the session on api:unauthorized', async () => {
-    sessionStorage.setItem('mock-exams.session', '1')
+    localStorage.setItem('mock-exams.session', '1')
     mocks.getMe.mockResolvedValue(me)
 
     render(
@@ -105,6 +105,6 @@ describe('AuthProvider', () => {
 
     await waitFor(() => expect(client.signOut).toHaveBeenCalledTimes(1))
     await waitFor(() => expect(screen.getByTestId('authed').textContent).toBe('false'))
-    expect(sessionStorage.getItem('mock-exams.session')).toBeNull()
+    expect(localStorage.getItem('mock-exams.session')).toBeNull()
   })
 })

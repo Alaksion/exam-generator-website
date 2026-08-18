@@ -28,7 +28,7 @@ export function saveSession(
   tokens: Pick<CognitoTokens, 'idToken' | 'accessToken'>,
 ): void {
   setTokens(tokens.idToken, tokens.accessToken)
-  sessionStorage.setItem(SESSION_KEY, '1')
+  localStorage.setItem(SESSION_KEY, '1')
   notify()
 }
 
@@ -47,15 +47,15 @@ export function getBearerToken(): string | null {
   return idToken
 }
 
-/** True when a session was previously saved, so a reload can try to restore it. */
+/** True when a session was previously saved, so a reload or new tab can try to restore it. */
 export function hasStoredSession(): boolean {
-  return sessionStorage.getItem(SESSION_KEY) !== null
+  return localStorage.getItem(SESSION_KEY) !== null
 }
 
 export function clearSession(): void {
   idToken = null
   accessToken = null
-  sessionStorage.removeItem(SESSION_KEY)
+  localStorage.removeItem(SESSION_KEY)
   notify()
 }
 

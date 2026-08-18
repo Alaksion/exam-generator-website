@@ -36,7 +36,7 @@ describe('session store', () => {
   })
 
   it('treats a persisted marker as a stored session', () => {
-    sessionStorage.setItem('mock-exams.session', '1')
+    localStorage.setItem('mock-exams.session', '1')
     expect(hasStoredSession()).toBe(true)
   })
 
