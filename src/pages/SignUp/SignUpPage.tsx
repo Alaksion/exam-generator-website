@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react'
 import { useAuth } from '@/lib/auth'
 import { AuthFlowError, authFlowErrorMessage } from '@/lib/auth-errors'
 import { cognitoSignUpService } from '@/lib/signup'
+import { logError } from '@/lib/log'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,6 +30,7 @@ export function SignUpPage() {
       await cognitoSignUpService.createAccount(trimmedEmail, password)
       setStage('confirm')
     } catch (err) {
+      logError('signup.createAccount', err)
       setError(
         err instanceof AuthFlowError ? authFlowErrorMessage(err.kind) : 'Unable to create your account.',
       )
