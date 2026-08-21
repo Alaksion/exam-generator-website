@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Mock-exams web app static hosting. Deploys a private S3 bucket fronted by a
+  CloudFront distribution (Origin Access Control) that serves the Vite build
+  output. The deploy workflow syncs `dist/` into the bucket and invalidates
+  the distribution after each push to main.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: mock-exams-website
+  Stage:
+    Type: String
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Default: prod
+  DomainName:
+    Type: String
+    Default: ""
+    Description: >-
+      Optional custom domain alias (e.g. app.example.com). Requires
+      CertificateArn.
+  CertificateArn:
+    Type: String
+    Default: ""
+    Description: >-
+      ARN of an ACM certificate for CloudFront. Must be provisioned in
+      us-east-1, regardless of the bucket's region. Required when DomainName
+      is set.
+  PriceClass:
+    Type: String
+    Default: PriceClass_100
+    AllowedValues:
+      - PriceClass_100
+      - PriceClass_200
+      - PriceClass_All
+  BucketRemovalPolicy:
+    Type: String
+    AllowedValues:
+      - Delete
+      - Retain
+    Default: Delete
+    Description: >-
+      Delete tries to remove the bucket (and its CloudFront OAC policy) on
+      stack deletion and will fail if the bucket is not empty. Retain keeps
+      the bucket and the bucket policy.
+
+Conditions:
+  HasCustomDomain: !Not [!Equals [!Ref DomainName, ""]]
+  RetainBucket: !Equals [!Ref BucketRemovalPolicy, "Retain"]
+
+Resources:
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: !If [RetainBucket, Retain, Delete]
+    UpdateReplacePolicy: !If [RetainBucket, Retain, Delete]
+    Properties:
+      BucketName: !Sub "${ProjectName}-${Stage}-website"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  WebsiteOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${ProjectName}-${Stage}-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${WebsiteDistribution}"
+
+  WebsiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        PriceClass: !Ref PriceClass
+        Aliases: !If [HasCustomDomain, [!Ref DomainName], !Ref "AWS::NoValue"]
+        ViewerCertificate:
+          Fn::If:
+            - HasCustomDomain
+            - AcmCertificateArn: !Ref CertificateArn
+              SslSupportMethod: sni-only
+              MinimumProtocolVersion: TLSv1.2_2021
+            - CloudFrontDefaultCertificate: true
+        Origins:
+          - Id: WebsiteOrigin
+            DomainName: !GetAtt WebsiteBucket.RegionalDomainName
+            OriginAccessControlId: !Ref WebsiteOriginAccessControl
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: WebsiteOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          CachePolicyId: 658f2d0e-2494-4a30-8e2d-1f24f1e2d0a5
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+Outputs:
+  BucketName:
+    Description: Name of the S3 bucket the workflow syncs the build into.
+    Value: !Ref WebsiteBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-BucketName"
+  DistributionId:
+    Description: CloudFront distribution id used for cache invalidation.
+    Value: !Ref WebsiteDistribution
+    Export:
+      Name: !Sub "${AWS::StackName}-DistributionId"
+  CloudFrontDomain:
+    Description: Public HTTPS endpoint. Use this unless a custom DomainName is set.
+    Value: !If [HasCustomDomain, !Ref DomainName, !GetAtt WebsiteDistribution.DomainName]
