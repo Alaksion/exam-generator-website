@@ -60,12 +60,18 @@ describe('toCognitoTokens', () => {
 
 describe('cognitoClient', () => {
   beforeEach(() => {
+    vi.stubEnv('VITE_USER_POOL_ID', 'test-pool')
+    vi.stubEnv('VITE_USER_POOL_CLIENT_ID', 'test-client')
     mocks.fetchAuthSession.mockReset()
     mocks.getCurrentUser.mockReset()
     mocks.signIn.mockReset()
     mocks.signOut.mockReset()
     mocks.signIn.mockResolvedValue(undefined)
     mocks.signOut.mockResolvedValue(undefined)
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
   })
 
   it('clears a stale Cognito session before signing in', async () => {
