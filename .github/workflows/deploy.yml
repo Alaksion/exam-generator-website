@@ -46,9 +46,9 @@ jobs:
           VITE_USER_POOL_ID: ${{ secrets.VITE_USER_POOL_ID }}
           VITE_USER_POOL_CLIENT_ID: ${{ secrets.VITE_USER_POOL_CLIENT_ID }}
           VITE_USER_POOL_DOMAIN: ${{ secrets.VITE_USER_POOL_DOMAIN }}
-          VITE_OAUTH_CALLBACK_PATH: ${{ vars.VITE_OAUTH_CALLBACK_PATH || '/auth/callback' }}
-          VITE_SOCIAL_GOOGLE_ENABLED: ${{ vars.VITE_SOCIAL_GOOGLE_ENABLED || 'false' }}
-          VITE_SOCIAL_APPLE_ENABLED: ${{ vars.VITE_SOCIAL_APPLE_ENABLED || 'false' }}
+          VITE_OAUTH_CALLBACK_PATH: ${{ secrets.VITE_OAUTH_CALLBACK_PATH || '/auth/callback' }}
+          VITE_SOCIAL_GOOGLE_ENABLED: ${{ secrets.VITE_SOCIAL_GOOGLE_ENABLED || 'false' }}
+          VITE_SOCIAL_APPLE_ENABLED: ${{ secrets.VITE_SOCIAL_APPLE_ENABLED || 'false' }}
         run: npm run build
 
       - name: Upload build artifact
