@@ -21,6 +21,8 @@ jobs:
   test-and-build:
     name: Test and build
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
