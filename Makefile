@@ -2,11 +2,11 @@ PROJECT ?= mock-exams-website
 STAGE ?= prod
 AWS_REGION ?= us-east-1
 
-OIDC_STACK := $(PROJECT)-github-actions
+OIDC_STACK := exam-generator-website-github-bootstrap
 SITE_STACK := $(PROJECT)-$(STAGE)
 
-OIDC_TEMPLATE := infra/cloudformation/github-actions-oidc.yaml
-SITE_TEMPLATE := infra/cloudformation/static-site.yaml
+OIDC_TEMPLATE := infra/github-actions-oidc-role.yaml
+SITE_TEMPLATE := infra/static-site.yaml
 
 STAGES := dev staging prod
 
@@ -23,8 +23,8 @@ endif
 help:
 	@echo "Usage: make <target> [STAGE=prod|staging|dev] [AWS_REGION=us-east-1]"
 	@echo ""
-	@echo "  deploy          Provision OIDC role + static site stack for STAGE"
-	@echo "  deploy-oidc     Provision the GitHub OIDC provider + deploy role (once)"
+	@echo "  deploy          Provision deploy role + static site stack for STAGE"
+	@echo "  deploy-oidc     Create the GitHub Actions deploy role (OIDC provider is shared)"
 	@echo "  deploy-site     Provision/update the S3+CloudFront stack for STAGE"
 	@echo "  validate        Validate both CloudFormation templates"
 	@echo "  outputs         Show the site stack outputs for STAGE"
