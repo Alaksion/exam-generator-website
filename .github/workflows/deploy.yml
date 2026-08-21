@@ -2,19 +2,20 @@ name: Deploy
 
 on:
   workflow_dispatch:
-
-concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        required: true
+        default: dev
+        options:
+          - dev
+          - staging
+          - prod
 
 permissions:
   id-token: write
   contents: read
-
-env:
-  STAGE: ${{ vars.DEPLOY_STAGE || 'prod' }}
-  STACK_NAME: mock-exams-website-${{ vars.DEPLOY_STAGE || 'prod' }}
-  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
 
 jobs:
   test-and-build:
@@ -56,9 +57,14 @@ jobs:
           path: dist
 
   deploy:
-    needs: test-and-build
+    name: Deploy to ${{ inputs.environment}}
     runs-on: ubuntu-latest
-    environment: ${{ vars.DEPLOY_STAGE || 'prod' }}
+    needs: test-and-build
+    environment:
+      name: ${{ inputs.environment }}
+    concurrency:
+      group: deploy-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Download build artifact
         uses: actions/download-artifact@v4
@@ -69,8 +75,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Resolve stack outputs
         id: stack
