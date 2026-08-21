@@ -46,6 +46,13 @@ Parameters:
       Delete tries to remove the bucket (and its CloudFront OAC policy) on
       stack deletion and will fail if the bucket is not empty. Retain keeps
       the bucket and the bucket policy.
+  CachePolicyId:
+    Type: String
+    Default: 658327ea-f89d-4fab-a63d-7e88639e58f6
+    Description: >-
+      AWS-managed CloudFront cache policy to apply to the default cache
+      behavior. The default (CachingOptimized) suits an S3 origin cached with
+      GET/HEAD. Applies in every account.
 
 Conditions:
   HasCustomDomain: !Not [!Equals [!Ref DomainName, ""]]
@@ -118,7 +125,7 @@ Resources:
           Compress: true
           AllowedMethods: [GET, HEAD, OPTIONS]
           CachedMethods: [GET, HEAD]
-          CachePolicyId: 658f2d0e-2494-4a30-8e2d-1f24f1e2d0a5
+          CachePolicyId: !Ref CachePolicyId
         CustomErrorResponses:
           - ErrorCode: 403
             ResponseCode: 200
