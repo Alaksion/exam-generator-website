@@ -6,6 +6,7 @@ import { logError } from '@/lib/log'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { FormError } from '@/components/FormError'
 
 export function SignUpPage() {
   const { signIn } = useAuth()
@@ -79,7 +80,7 @@ export function SignUpPage() {
   return (
     <form
       onSubmit={stage === 'details' ? handleCreate : handleConfirm}
-      className="w-full max-w-sm rounded-lg border bg-card p-8 shadow-sm"
+      className="w-full max-w-sm rounded-lg border bg-card p-6 shadow-sm sm:p-8"
     >
       <h1 className="mb-1 text-xl font-semibold">
         {stage === 'details' ? 'Create an account' : 'Verify your email'}
@@ -120,9 +121,7 @@ export function SignUpPage() {
               }}
             />
           </div>
-          {error && (
-            <p role="alert" className="mb-4 text-sm text-destructive">{error}</p>
-          )}
+          <FormError message={error} />
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Creating account…' : 'Create account'}
           </Button>
@@ -143,9 +142,7 @@ export function SignUpPage() {
               autoFocus
             />
           </div>
-          {error && (
-            <p role="alert" className="mb-4 text-sm text-destructive">{error}</p>
-          )}
+          <FormError message={error} />
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Verifying…' : 'Verify and sign in'}
           </Button>
