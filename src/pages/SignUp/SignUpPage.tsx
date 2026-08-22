@@ -120,7 +120,9 @@ export function SignUpPage() {
               }}
             />
           </div>
-          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          {error && (
+            <p role="alert" className="mb-4 text-sm text-destructive">{error}</p>
+          )}
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Creating account…' : 'Create account'}
           </Button>
@@ -141,7 +143,9 @@ export function SignUpPage() {
               autoFocus
             />
           </div>
-          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          {error && (
+            <p role="alert" className="mb-4 text-sm text-destructive">{error}</p>
+          )}
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Verifying…' : 'Verify and sign in'}
           </Button>

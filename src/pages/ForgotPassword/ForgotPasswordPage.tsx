@@ -86,7 +86,9 @@ export function ForgotPasswordPage() {
               autoFocus
             />
           </div>
-          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          {error && (
+            <p role="alert" className="mb-4 text-sm text-destructive">{error}</p>
+          )}
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Sending…' : 'Send reset code'}
           </Button>
@@ -123,7 +125,9 @@ export function ForgotPasswordPage() {
               }}
             />
           </div>
-          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          {error && (
+            <p role="alert" className="mb-4 text-sm text-destructive">{error}</p>
+          )}
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Resetting…' : 'Reset password'}
           </Button>
