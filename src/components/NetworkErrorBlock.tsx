@@ -1,4 +1,5 @@
 import { ApiRequestError } from '@/lib/api'
+import { Button } from '@/components/ui/button'
 
 interface NetworkErrorProps {
   error: Error | null
@@ -31,15 +32,12 @@ export function NetworkErrorBlock({ error, onRetry }: NetworkErrorProps) {
     : error.message || 'A network error occurred. Please check your connection.'
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <p className="text-sm text-gray-500 mb-4">{message}</p>
+    <div role="alert" className="flex flex-col items-center justify-center py-12 text-center">
+      <p className="mb-4 text-sm text-muted-foreground">{message}</p>
       {onRetry && (
-        <button
-          onClick={onRetry}
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"
-        >
+        <Button variant="outline" onClick={onRetry}>
           Retry
-        </button>
+        </Button>
       )}
     </div>
   )

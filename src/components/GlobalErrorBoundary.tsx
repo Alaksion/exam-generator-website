@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { ApiRequestError } from '@/lib/api'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   children: ReactNode
@@ -72,17 +73,14 @@ export class GlobalErrorBoundary extends Component<Props, State> {
       const canRetry = !isApiError || error.status !== 401
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm text-center">
-            <h1 className="text-xl font-semibold mb-2">{title}</h1>
-            <p className="text-sm text-gray-500 mb-6">{message}</p>
+        <div role="alert" className="flex min-h-screen items-center justify-center bg-background">
+          <div className="w-full max-w-sm rounded-lg border bg-card p-8 text-center">
+            <h1 className="mb-2 text-xl font-semibold">{title}</h1>
+            <p className="mb-6 text-sm text-muted-foreground">{message}</p>
             {canRetry && (
-              <button
-                onClick={this.handleRetry}
-                className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"
-              >
+              <Button variant="outline" onClick={this.handleRetry}>
                 Try again
-              </button>
+              </Button>
             )}
           </div>
         </div>
