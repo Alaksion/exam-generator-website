@@ -147,4 +147,23 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
     }
+  /* Native keyboard focus: components override with their own focus-visible
+     ring utilities (which win because utilities outrank the base layer), while
+     plain links and other elements get a consistent visible outline. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Honor the OS-level "reduce motion" preference for users who request it. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
