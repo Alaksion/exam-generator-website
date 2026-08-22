@@ -20,7 +20,7 @@ export function AuthCallbackPage() {
   }, [signInWithSocial])
 
   return (
-    <div className="w-full max-w-sm rounded-lg border bg-card p-8 text-center shadow-sm">
+    <div className="w-full max-w-sm rounded-lg border bg-card p-6 text-center shadow-sm sm:p-8">
       <h1 className="mb-2 text-xl font-semibold">
         {error ? 'Sign in failed' : 'Signing you in…'}
       </h1>
