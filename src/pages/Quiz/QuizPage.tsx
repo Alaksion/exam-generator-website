@@ -94,7 +94,7 @@ export function QuizPage() {
         />
       </div>
 
-      <div className="rounded-lg border p-6">
+      <div className="rounded-lg border p-4 sm:p-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {question.domain}
         </p>

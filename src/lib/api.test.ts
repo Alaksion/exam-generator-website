@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
-import { apiRequest, ApiRequestError } from '@/lib/api'
+import { apiRequest, ApiRequestError, apiErrorMessage } from '@/lib/api'
 import {
   clearSession,
   registerSessionRefresher,
@@ -177,5 +177,19 @@ describe('apiRequest', () => {
     await apiRequest('/v1/test').catch(() => {})
 
     expect(refresh).not.toHaveBeenCalled()
+  })
+})
+
+describe('apiErrorMessage', () => {
+  it('returns a human message for known status codes', () => {
+    for (const status of [400, 401, 404, 409, 429, 500]) {
+      const message = apiErrorMessage(status)
+      expect(message.length).toBeGreaterThan(0)
+      expect(apiErrorMessage(status)).not.toBe('An unexpected error occurred.')
+    }
+  })
+
+  it('falls back to a generic message for unknown statuses', () => {
+    expect(apiErrorMessage(418)).toBe('An unexpected error occurred.')
   })
 })

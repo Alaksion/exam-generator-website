@@ -5,6 +5,7 @@ import { cognitoForgotPasswordService } from '@/lib/forgot-password'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { FormError } from '@/components/FormError'
 
 export function ForgotPasswordPage() {
   const { signIn } = useAuth()
@@ -61,7 +62,7 @@ export function ForgotPasswordPage() {
   return (
     <form
       onSubmit={stage === 'request' ? handleRequest : handleReset}
-      className="w-full max-w-sm rounded-lg border bg-card p-8 shadow-sm"
+      className="w-full max-w-sm rounded-lg border bg-card p-6 shadow-sm sm:p-8"
     >
       <h1 className="mb-1 text-xl font-semibold">
         {stage === 'request' ? 'Reset your password' : 'Enter the reset code'}
@@ -86,7 +87,7 @@ export function ForgotPasswordPage() {
               autoFocus
             />
           </div>
-          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          <FormError message={error} />
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Sending…' : 'Send reset code'}
           </Button>
@@ -123,7 +124,7 @@ export function ForgotPasswordPage() {
               }}
             />
           </div>
-          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          <FormError message={error} />
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Resetting…' : 'Reset password'}
           </Button>

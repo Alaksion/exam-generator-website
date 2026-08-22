@@ -151,7 +151,7 @@ export function ReviewPage() {
                           </span>
                         )}
                         {!isSelected && isCorrect && (
-                          <span className="ml-2 text-xs font-semibold text-green-700">
+                          <span className="ml-2 text-xs font-semibold text-green-800">
                             Correct answer
                           </span>
                         )}

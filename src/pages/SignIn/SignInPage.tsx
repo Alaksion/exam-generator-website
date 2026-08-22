@@ -6,6 +6,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { FormError } from '@/components/FormError'
 import { getAuthConfig, isProviderEnabled, type SocialProvider } from '@/lib/auth-config'
 import { cognitoSocialSignInService } from '@/lib/social-signin'
 import { cn } from '@/lib/utils'
@@ -57,7 +58,7 @@ export function SignInPage() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-sm rounded-lg border bg-card p-8 shadow-sm"
+      className="w-full max-w-sm rounded-lg border bg-card p-6 shadow-sm sm:p-8"
     >
       <h1 className="mb-1 text-xl font-semibold">Sign in</h1>
       <p className="mb-6 text-sm text-muted-foreground">
@@ -105,7 +106,7 @@ export function SignInPage() {
         </div>
       </div>
 
-      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+      <FormError message={error} />
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? 'Signing in…' : 'Sign in'}
