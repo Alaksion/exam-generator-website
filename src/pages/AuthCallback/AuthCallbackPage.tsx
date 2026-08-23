@@ -28,7 +28,7 @@ export function AuthCallbackPage() {
         <>
           <p className="mb-6 text-sm text-destructive">{error}</p>
           <Link
-            to="/"
+            to="/sign-in"
             className={cn(buttonVariants({ variant: 'link' }), 'h-auto px-0 py-0')}
           >
             Back to sign in
