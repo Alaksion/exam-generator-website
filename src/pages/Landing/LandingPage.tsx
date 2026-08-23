@@ -27,13 +27,6 @@ function LandingMotif({ className }: { className?: string }) {
         <rect x="208" y="208" width="32" height="32" rx="2" />
         <rect x="272" y="272" width="32" height="32" rx="2" />
       </g>
-      <g className="fill-accent">
-        <circle cx="48" cy="160" r="8" />
-        <circle cx="112" cy="32" r="8" />
-        <circle cx="176" cy="96" r="8" />
-        <circle cx="240" cy="160" r="8" />
-        <circle cx="304" cy="48" r="8" />
-      </g>
     </svg>
   )
 }
@@ -137,7 +130,7 @@ export function LandingPage() {
           <h2 className="font-heading text-2xl font-semibold mb-6">
             How it works
           </h2>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-lg border p-5">
               <h3 className="font-heading text-lg font-medium">1. Pick a certification</h3>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -146,7 +139,16 @@ export function LandingPage() {
             </div>
             <div className="rounded-lg border p-5">
               <h3 className="font-heading text-lg font-medium">
-                2. Take the practice exam
+                2. Generate a practice exam
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Get a fresh set of questions scoped to the certification's domains
+                and topics.
+              </p>
+            </div>
+            <div className="rounded-lg border p-5">
+              <h3 className="font-heading text-lg font-medium">
+                3. Take the practice exam
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 Work through the questions at your own pace, one at a time.
@@ -154,7 +156,7 @@ export function LandingPage() {
             </div>
             <div className="rounded-lg border p-5">
               <h3 className="font-heading text-lg font-medium">
-                3. Review your breakdown
+                4. Review your breakdown
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 See your score and which domains to study next.
