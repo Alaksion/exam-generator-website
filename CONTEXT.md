@@ -4,6 +4,12 @@ Domain language for the React web app that consumes the `exam-generator` backend
 
 ## Language
 
+## Marketing & public surface
+
+**Landing** (the page):
+The public marketing page at `/` that a signed-out visitor sees: a value-prop hero with a sign-up CTA, a feature strip, a how-it-works walkthrough, a final CTA band, and a minimal footer. Distinct from the authenticated app: an in-app `/` reference (the Catalog) is served to signed-in Users, while the Landing is a full-width shell unmounted from the centered auth-card layout.
+_Avoid_: Home page, marketing page (unqualified), splash.
+
 ## Identity & authorization
 
 **User**:
