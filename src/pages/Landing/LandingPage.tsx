@@ -52,6 +52,75 @@ export function LandingPage() {
           </div>
         </section>
 
+        <section className="mt-12">
+          <div className="mb-6">
+            <h2 className="font-heading text-2xl font-semibold">
+              Why mock exams work
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Reading is easy to mistake for studying. Guided practice turns
+              what you do not know into a plan.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-lg border p-5">
+              <h3 className="font-heading text-lg font-medium">Generated for you</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Pick a certification and get a fresh practice exam scoped to its
+                domains and topics — on demand, not a reused question bank.
+              </p>
+            </div>
+            <div className="rounded-lg border p-5">
+              <h3 className="font-heading text-lg font-medium">
+                Domain-level breakdown
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                After you submit, see your score split by domain so you know
+                precisely which area to study next.
+              </p>
+            </div>
+            <div className="rounded-lg border p-5">
+              <h3 className="font-heading text-lg font-medium">
+                Ready-to-download PDFs
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your completed exam is available as a PDF, so you can study away
+                from the screen.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-12">
+          <h2 className="font-heading text-2xl font-semibold mb-6">
+            How it works
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-lg border p-5">
+              <h3 className="font-heading text-lg font-medium">1. Pick a certification</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Choose from the catalog and review its exam plan before you begin.
+              </p>
+            </div>
+            <div className="rounded-lg border p-5">
+              <h3 className="font-heading text-lg font-medium">
+                2. Take the practice exam
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Work through the questions at your own pace, one at a time.
+              </p>
+            </div>
+            <div className="rounded-lg border p-5">
+              <h3 className="font-heading text-lg font-medium">
+                3. Review your breakdown
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                See your score and which domains to study next.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section className="mt-12 rounded-lg border p-6 text-center sm:p-8">
           <h2 className="font-heading text-2xl font-semibold">
             Ready to see where you stand?
