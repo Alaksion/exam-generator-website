@@ -26,8 +26,6 @@ function LandingMotif({ className }: { className?: string }) {
         <rect x="144" y="144" width="32" height="32" rx="2" />
         <rect x="208" y="208" width="32" height="32" rx="2" />
         <rect x="272" y="272" width="32" height="32" rx="2" />
-      </g>
-      <g className="fill-accent">
         <circle cx="48" cy="160" r="8" />
         <circle cx="112" cy="32" r="8" />
         <circle cx="176" cy="96" r="8" />
@@ -35,6 +33,20 @@ function LandingMotif({ className }: { className?: string }) {
         <circle cx="304" cy="48" r="8" />
       </g>
     </svg>
+  )
+}
+
+interface LandingCardProps {
+  title: string
+  children: React.ReactNode
+}
+
+function LandingCard({ title, children }: LandingCardProps) {
+  return (
+    <div className="rounded-lg border p-5">
+      <h3 className="font-heading text-lg font-medium">{title}</h3>
+      <p className="mt-1 text-sm text-muted-foreground">{children}</p>
+    </div>
   )
 }
 
@@ -105,31 +117,18 @@ export function LandingPage() {
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-lg border p-5">
-              <h3 className="font-heading text-lg font-medium">Generated for you</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Pick a certification and get a fresh practice exam scoped to its
-                domains and topics — on demand, not a reused question bank.
-              </p>
-            </div>
-            <div className="rounded-lg border p-5">
-              <h3 className="font-heading text-lg font-medium">
-                Domain-level breakdown
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                After you submit, see your score split by domain so you know
-                precisely which area to study next.
-              </p>
-            </div>
-            <div className="rounded-lg border p-5">
-              <h3 className="font-heading text-lg font-medium">
-                Ready-to-download PDFs
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your completed exam is available as a PDF, so you can study away
-                from the screen.
-              </p>
-            </div>
+            <LandingCard title="Generated for you">
+              Pick a certification and get a fresh practice exam scoped to its
+              domains and topics — on demand, not a reused question bank.
+            </LandingCard>
+            <LandingCard title="Domain-level breakdown">
+              After you submit, see your score split by domain so you know
+              precisely which area to study next.
+            </LandingCard>
+            <LandingCard title="Ready-to-download PDFs">
+              Your completed exam is available as a PDF, so you can study away
+              from the screen.
+            </LandingCard>
           </div>
         </section>
 
@@ -137,29 +136,20 @@ export function LandingPage() {
           <h2 className="font-heading text-2xl font-semibold mb-6">
             How it works
           </h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-lg border p-5">
-              <h3 className="font-heading text-lg font-medium">1. Pick a certification</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Choose from the catalog and review its exam plan before you begin.
-              </p>
-            </div>
-            <div className="rounded-lg border p-5">
-              <h3 className="font-heading text-lg font-medium">
-                2. Take the practice exam
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Work through the questions at your own pace, one at a time.
-              </p>
-            </div>
-            <div className="rounded-lg border p-5">
-              <h3 className="font-heading text-lg font-medium">
-                3. Review your breakdown
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                See your score and which domains to study next.
-              </p>
-            </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <LandingCard title="1. Pick a certification">
+              Choose from the catalog and review its exam plan before you begin.
+            </LandingCard>
+            <LandingCard title="2. Generate the exam">
+              Confirm the plan and the platform builds a fresh practice exam
+              from your certification&apos;s domains and topics.
+            </LandingCard>
+            <LandingCard title="3. Take the attempt">
+              Work through the questions at your own pace, one at a time.
+            </LandingCard>
+            <LandingCard title="4. Review the breakdown">
+              See your score and which domains to study next.
+            </LandingCard>
           </div>
         </section>
 
