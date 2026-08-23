@@ -3,6 +3,7 @@ import { SignInPage } from "@/pages/SignIn/SignInPage";
 import { SignUpPage } from "@/pages/SignUp/SignUpPage";
 import { ForgotPasswordPage } from "@/pages/ForgotPassword/ForgotPasswordPage";
 import { AuthCallbackPage } from "@/pages/AuthCallback/AuthCallbackPage";
+import { LandingPage } from "@/pages/Landing/LandingPage";
 import { getAuthConfig } from "@/lib/auth-config";
 import { useAuth } from "@/lib/auth";
 import { UiShell } from "@/components/UiShell";
@@ -61,18 +62,33 @@ function AuthenticatedApp() {
   );
 }
 
+function AuthCenter({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      {children}
+    </div>
+  );
+}
+
 function AuthApp() {
   const { callbackPath } = getAuthConfig();
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <Routes>
-        <Route index element={<SignInPage />} />
-        <Route path="sign-up" element={<SignUpPage />} />
-        <Route path="forgot-password" element={<ForgotPasswordPage />} />
-        <Route path={callbackPath} element={<AuthCallbackPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </div>
+    <Routes>
+      <Route index element={<LandingPage />} />
+      <Route
+        element={
+          <AuthCenter>
+            <Routes>
+              <Route path="sign-in" element={<SignInPage />} />
+              <Route path="sign-up" element={<SignUpPage />} />
+              <Route path="forgot-password" element={<ForgotPasswordPage />} />
+              <Route path={callbackPath} element={<AuthCallbackPage />} />
+            </Routes>
+          </AuthCenter>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
