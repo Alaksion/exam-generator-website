@@ -23,7 +23,52 @@ export function LandingPage() {
           </Link>
         </div>
       </header>
-      <main id="main-content" className="mx-auto max-w-5xl px-4 py-8"></main>
+      <main id="main-content" className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
+        <section className="rounded-lg border p-6 sm:p-8">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+            Cloud certifications
+          </p>
+          <h1 className="mt-3 font-heading text-4xl sm:text-5xl font-semibold tracking-tight">
+            Practice exams generated on demand
+          </h1>
+          <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
+            Stop reading cloud docs and hoping. Generate a guided mock exam for
+            a certification, take it, and see exactly which domains to study
+            next.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link
+              to="/sign-up"
+              className={buttonVariants({ variant: 'default', size: 'lg' })}
+            >
+              Get started
+            </Link>
+            <Link
+              to="/sign-in"
+              className={buttonVariants({ variant: 'link', size: 'lg' })}
+            >
+              Sign in
+            </Link>
+          </div>
+        </section>
+
+        <section className="mt-12 rounded-lg border p-6 text-center sm:p-8">
+          <h2 className="font-heading text-2xl font-semibold">
+            Ready to see where you stand?
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Generate your first practice exam in minutes.
+          </p>
+          <div className="mt-4">
+            <Link
+              to="/sign-up"
+              className={buttonVariants({ variant: 'default', size: 'lg' })}
+            >
+              Get started
+            </Link>
+          </div>
+        </section>
+      </main>
       <footer className="border-t">
         <div className="mx-auto max-w-5xl px-4 py-6">
           <p className="text-sm text-muted-foreground">Mock Exams</p>
