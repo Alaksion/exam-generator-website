@@ -27,6 +27,7 @@ function AdminRoute({ role, children }: { role: Role; children: React.ReactNode 
 
 function AuthenticatedApp() {
   const { user } = useAuth();
+  const { callbackPath } = getAuthConfig();
 
   // Identity (and therefore role) resolves asynchronously after login / reload.
   // Render a placeholder until the user is loaded so an admin is not
@@ -38,6 +39,19 @@ function AuthenticatedApp() {
   const role = user.role;
   return (
     <Routes>
+      <Route
+        path="/sign-in"
+        element={<Navigate to="/" replace />}
+      />
+      <Route
+        path="/sign-up"
+        element={<Navigate to="/" replace />}
+      />
+      <Route
+        path="/forgot-password"
+        element={<Navigate to="/" replace />}
+      />
+      <Route path={callbackPath} element={<Navigate to="/" replace />} />
       <Route element={<UiShell />}>
         <Route index element={<CatalogPage />} />
         <Route path="/certifications/:id" element={<GeneratePage />} />
