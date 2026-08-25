@@ -1,4 +1,4 @@
-import { Route, Routes, Navigate } from "react-router-dom";
+import { Route, Routes, Navigate, Outlet } from "react-router-dom";
 import { SignInPage } from "@/pages/SignIn/SignInPage";
 import { SignUpPage } from "@/pages/SignUp/SignUpPage";
 import { ForgotPasswordPage } from "@/pages/ForgotPassword/ForgotPasswordPage";
@@ -62,10 +62,10 @@ function AuthenticatedApp() {
   );
 }
 
-function AuthCenter({ children }: { children: React.ReactNode }) {
+function AuthCenter() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      {children}
+      <Outlet />
     </div>
   );
 }
@@ -75,18 +75,12 @@ function AuthApp() {
   return (
     <Routes>
       <Route index element={<LandingPage />} />
-      <Route
-        element={
-          <AuthCenter>
-            <Routes>
-              <Route path="sign-in" element={<SignInPage />} />
-              <Route path="sign-up" element={<SignUpPage />} />
-              <Route path="forgot-password" element={<ForgotPasswordPage />} />
-              <Route path={callbackPath} element={<AuthCallbackPage />} />
-            </Routes>
-          </AuthCenter>
-        }
-      />
+      <Route element={<AuthCenter />}>
+        <Route path="sign-in" element={<SignInPage />} />
+        <Route path="sign-up" element={<SignUpPage />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path={callbackPath} element={<AuthCallbackPage />} />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
